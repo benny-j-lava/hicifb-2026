@@ -271,6 +271,7 @@ function renderMain(){
 // ---------- OVERVIEW ----------
 function renderOverview(){
   const d = DATA.dashboard || {};
+  const hasHighScore = d.highScoreLeader && Number(d.highScoreTotal) > 0;
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>t.TeamName).sort();
 
   return `
@@ -286,7 +287,7 @@ function renderOverview(){
 
   <div class="card">
     <h3>Highest score race</h3>
-    ${d.highScoreLeader ? `<p style="margin:0;"><span class="lead-name">${d.highScoreLeader}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
+    ${hasHighScore ? `<p style="margin:0;"><span class="lead-name">${d.highScoreLeader}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
       : `<p class="empty">No scores logged yet.</p>`}
   </div>
 
