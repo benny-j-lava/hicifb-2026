@@ -281,8 +281,7 @@ function renderOverview(){
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
 
   return `
-  <h2 class="section-title">Season at a glance</h2>
-  <p class="section-sub">Live from the league sheet — updates whenever you reload this page.</p>
+  <h2 class="section-title" style="margin-bottom:18px;">Season at a glance</h2>
 
   <div class="metric-grid">
     <div class="metric"><span class="v accent-green">${fmt(d.weeklyPayoutsToDate)}</span><span class="l">Weekly payouts to date</span></div>
