@@ -238,7 +238,13 @@ function cleanData(){
 
 function teamName(id){
   const t = (DATA.teams||[]).find(x=>x.TeamID===id);
-  return t ? t.TeamName : (id || '—');
+  if(!t) return id || '—';
+  return t.Owner ? `${t.TeamName} (${t.Owner})` : t.TeamName;
+}
+function nameWithOwner(name){
+  if(!name) return name;
+  const t = (DATA.teams||[]).find(x=>x.TeamName===name);
+  return (t && t.Owner) ? `${name} (${t.Owner})` : name;
 }
 
 function renderHeader(){
@@ -272,7 +278,7 @@ function renderMain(){
 function renderOverview(){
   const d = DATA.dashboard || {};
   const hasHighScore = d.highScoreLeader && Number(d.highScoreTotal) > 0;
-  const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>t.TeamName).sort();
+  const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
 
   return `
   <h2 class="section-title">Season at a glance</h2>
@@ -287,7 +293,7 @@ function renderOverview(){
 
   <div class="card">
     <h3>Highest score race</h3>
-    ${hasHighScore ? `<p style="margin:0;"><span class="lead-name">${d.highScoreLeader}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
+    ${hasHighScore ? `<p style="margin:0;"><span class="lead-name">${nameWithOwner(d.highScoreLeader)}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
       : `<p class="empty">No scores logged yet.</p>`}
   </div>
 
@@ -310,7 +316,7 @@ function renderPayouts(){
   const totals = (DATA.teamTotals||[]).slice().sort((a,b)=>Number(b.SeasonTotalPoints)-Number(a.SeasonTotalPoints));
   const rows = totals.map(t=>`
     <tr>
-      <td>${t.TeamName}</td>
+      <td>${teamName(t.TeamID)}</td>
       <td class="num-cell">${pts(t.SeasonTotalPoints)}</td>
       <td class="num-cell">${t.WeeksWon}</td>
       <td class="num-cell">${fmt(t.WeeklyPayoutEarned)}</td>
@@ -352,7 +358,7 @@ function renderTalbot(){
   const rows = fines.map(f=>`
     <tr>
       <td>Week ${f.Week}</td>
-      <td>${f.TeamName || teamName(f.TeamID)}</td>
+      <td>${teamName(f.TeamID)}</td>
       <td class="num-cell">${fmt(f.Amount)}</td>
       <td style="text-align:center;"><span class="pill ${f.Paid==='Yes'?'tag-green':'tag-amber'}">${f.Paid==='Yes'?'Paid':'Owed'}</span></td>
     </tr>
@@ -385,13 +391,13 @@ function renderSurvivor(){
     <tr>
       <td>Week ${w.week}</td>
       <td class="num-cell">${w.lowestScore !== '' && w.lowestScore != null ? pts(w.lowestScore) : '—'}</td>
-      <td>${w.eliminatedTeamName || '—'}</td>
+      <td>${w.eliminatedTeamId ? teamName(w.eliminatedTeamId) : '—'}</td>
     </tr>
   `).join('');
 
   const totals = DATA.teamTotals || [];
-  const alive = totals.filter(t=>t.SurvivorEliminated==='No').map(t=>t.TeamName).sort();
-  const eliminated = totals.filter(t=>t.SurvivorEliminated==='Yes').map(t=>t.TeamName).sort();
+  const alive = totals.filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
+  const eliminated = totals.filter(t=>t.SurvivorEliminated==='Yes').map(t=>teamName(t.TeamID)).sort();
   const d = DATA.dashboard || {};
 
   return `
@@ -401,7 +407,7 @@ function renderSurvivor(){
   <div class="card">
     <h3>Still alive (${d.survivorRemaining ?? alive.length})</h3>
     ${alive.length ? `<div class="team-grid">${alive.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div>` : `<p class="empty">No data yet.</p>`}
-    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${d.survivorWinner} wins Survivor</p>` : ''}
+    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${nameWithOwner(d.survivorWinner)} wins Survivor</p>` : ''}
   </div>
 
   ${eliminated.length ? `<div class="card"><h3>Eliminated</h3><div class="team-grid">${eliminated.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div></div>` : ''}
@@ -434,7 +440,7 @@ function renderWheel(){
   const punishments = (wheel.punishments||[]).filter(p=>typeof p.Slot === 'number' || p.Slot === 'CYOA');
   const rows = punishments.map(p=>`
     <tr>
-      <td>${p.TeamName || '—'}</td>
+      <td>${p.SubmittedBy ? teamName(p.SubmittedBy) : '—'}</td>
       <td>${p.PunishmentText ? linkify(p.PunishmentText) : '<span class="empty" style="padding:0;">Not submitted yet</span>'}</td>
       <td style="text-align:center;">${p.BoughtDown==='Yes' ? `<span class="pill tag-amber">Bought down${p.BuyDownCost?' — '+fmt(p.BuyDownCost):''}</span>` : (p.BoughtDown==='N/A' ? '<span class="pill tag-violet">Always in</span>' : '—')}</td>
     </tr>
@@ -496,7 +502,7 @@ function renderStandings(){
   const rows = (DATA.standings||[]).map(s=>`
     <tr>
       <td>${s.Place}</td>
-      <td>${s.TeamName || '—'}</td>
+      <td>${s.TeamID ? teamName(s.TeamID) : '—'}</td>
       <td class="num-cell">${fmt(s.Payout)}</td>
     </tr>
   `).join('');
