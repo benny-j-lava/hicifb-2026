@@ -414,6 +414,20 @@ function renderSurvivor(){
   `;
 }
 
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function linkify(text){
+  if(!text) return '';
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+  const escaped = escapeHtml(text);
+  return escaped.replace(/(https?:\/\/[^\s]+)/g, url => {
+    const clean = url.replace(/[.,;:)]+$/, '');
+    const trailing = url.slice(clean.length);
+    return `<a href="${clean}" target="_blank" rel="noopener" style="color:var(--violet);">${clean}</a>${trailing}`;
+  });
+}
+
 // ---------- WHEEL ----------
 function renderWheel(){
   const wheel = DATA.wheel || {};
@@ -421,7 +435,7 @@ function renderWheel(){
   const rows = punishments.map(p=>`
     <tr>
       <td>${p.TeamName || '—'}</td>
-      <td>${p.PunishmentText || '<span class="empty" style="padding:0;">Not submitted yet</span>'}</td>
+      <td>${p.PunishmentText ? linkify(p.PunishmentText) : '<span class="empty" style="padding:0;">Not submitted yet</span>'}</td>
       <td style="text-align:center;">${p.BoughtDown==='Yes' ? `<span class="pill tag-amber">Bought down${p.BuyDownCost?' — '+fmt(p.BuyDownCost):''}</span>` : (p.BoughtDown==='N/A' ? '<span class="pill tag-violet">Always in</span>' : '—')}</td>
     </tr>
   `).join('');
