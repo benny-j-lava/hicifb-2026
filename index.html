@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Huck It Chuck It Football — 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --bg-elev:#FFFFFF;
+    --text:#15171B;
+    --text-soft:#5B6169;
+    --text-muted:#8A9098;
+    --border:rgba(21,23,27,0.10);
+    --border-strong:rgba(21,23,27,0.20);
+    --green:#1E7D53; --green-bg:rgba(30,125,83,0.10);
+    --amber:#B5490C; --amber-bg:rgba(181,73,12,0.10);
+    --blue:#2158B0; --blue-bg:rgba(33,88,176,0.10);
+    --violet:#6B3FB5; --violet-bg:rgba(107,63,181,0.10);
+    --teal:#0E7A70; --teal-bg:rgba(14,122,112,0.10);
+    --gold:#8A6B12; --gold-bg:rgba(154,123,18,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15171B;
+      --bg-elev:#1D2025;
+      --text:#EDEDEB;
+      --text-soft:#A0A6AD;
+      --text-muted:#6B7178;
+      --border:rgba(255,255,255,0.09);
+      --border-strong:rgba(255,255,255,0.18);
+      --green:#6FCF97; --green-bg:rgba(111,207,151,0.14);
+      --amber:#E8875B; --amber-bg:rgba(232,135,91,0.14);
+      --blue:#7FB2FF; --blue-bg:rgba(127,178,255,0.14);
+      --violet:#B79CE8; --violet-bg:rgba(183,156,232,0.14);
+      --teal:#5EEAD4; --teal-bg:rgba(94,234,212,0.14);
+      --gold:#E4C368; --gold-bg:rgba(228,195,104,0.14);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Sora',sans-serif;font-weight:600;margin:0;}
+  .num{font-variant-numeric:tabular-nums;}
+  header{
+    padding:22px 20px 16px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  header h1{font-size:clamp(20px,4vw,26px);}
+  .badges{display:flex;gap:10px;flex-wrap:wrap;}
+  .badge{
+    background:var(--gold-bg);
+    color:var(--gold);
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:20px;
+  }
+  .link-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .link-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:none;
+    border:1px solid var(--border-strong);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    padding:6px 12px;
+    border-radius:20px;
+    text-decoration:none;
+  }
+  .link-btn:hover{background:var(--bg-elev);}
+  .link-btn svg{width:12px;height:12px;flex:0 0 auto;}
+  .team-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .team-chip{
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:13px;
+    font-weight:500;
+    padding:6px 12px;
+    border-radius:8px;
+  }
+  nav{
+    display:flex;
+    gap:4px;
+    overflow-x:auto;
+    padding:10px 16px 0;
+    border-bottom:1px solid var(--border);
+    scrollbar-width:none;
+  }
+  nav::-webkit-scrollbar{display:none;}
+  .navbtn{
+    flex:0 0 auto;
+    background:none;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--text-soft);
+    padding:10px 14px 12px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  .navbtn.active{color:var(--accent);border-bottom-color:var(--accent);}
+  main{max-width:900px;margin:0 auto;padding:24px 18px 70px;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade 0.15s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .section-title{font-size:20px;margin-bottom:4px;}
+  .section-sub{color:var(--text-soft);font-size:13.5px;margin:0 0 18px;}
+  .card{
+    background:var(--bg-elev);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:14px;
+  }
+  .card h3{font-size:14px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.04em;font-family:'Inter',sans-serif;font-weight:600;margin-bottom:12px;}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+  .metric{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+  .metric .v{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;display:block;}
+  .metric .l{font-size:12px;color:var(--text-muted);margin-top:2px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:6px 8px;border-bottom:1px solid var(--border-strong);}
+  td{padding:9px 8px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  .num-cell{text-align:right;font-variant-numeric:tabular-nums;}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+  .empty{color:var(--text-muted);font-size:13.5px;font-style:italic;padding:12px 0;}
+  .tag-green{background:var(--green-bg);color:var(--green);}
+  .tag-amber{background:var(--amber-bg);color:var(--amber);}
+  .tag-blue{background:var(--blue-bg);color:var(--blue);}
+  .tag-violet{background:var(--violet-bg);color:var(--violet);}
+  .tag-teal{background:var(--teal-bg);color:var(--teal);}
+  .tag-gold{background:var(--gold-bg);color:var(--gold);}
+  .loading, .error-msg{padding:60px 20px;text-align:center;color:var(--text-soft);}
+  .error-msg{color:var(--amber);}
+  .lead-name{font-family:'Sora',sans-serif;font-weight:600;}
+  .accent-green{color:var(--green);}
+  .accent-amber{color:var(--amber);}
+  .accent-blue{color:var(--blue);}
+  .accent-violet{color:var(--violet);}
+  .accent-teal{color:var(--teal);}
+  .accent-gold{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Huck It Chuck It Football</h1>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+    <div class="badges" id="header-badges">
+      <span class="badge">Loading…</span>
+    </div>
+    <div class="link-row">
+      <a class="link-btn" href="https://football.fantasysports.yahoo.com/f1/916694" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+        Yahoo league
+      </a>
+      <a class="link-btn" href="https://drive.google.com/file/d/11PVaaci91UFUF4hIhSQbyyXEigXacpQV/view?usp=sharing" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+        League rules
+      </a>
+    </div>
+  </div>
+</header>
+
+<nav id="tabs"></nav>
+<main id="main"><div class="loading">Loading league data…</div></main>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWtG0XWPUbC7nZpgRDntfXKofSJaysxnKWcYgoAjcAiBOg-CUFexBDH7ZdwI1Xa9Y/exec";
+
+const TABS = [
+  {id:'overview', label:'Overview', accent:'--text'},
+  {id:'payouts', label:'Payouts', accent:'--green'},
+  {id:'talbot', label:'Talbot toll', accent:'--amber'},
+  {id:'survivor', label:'Survivor', accent:'--blue'},
+  {id:'wheel', label:'Wheel', accent:'--violet'},
+  {id:'charity', label:'Charity', accent:'--teal'},
+  {id:'standings', label:'Standings', accent:'--gold'},
+  {id:'teams', label:'Teams', accent:'--text'}
+];
+
+let DATA = null;
+let activeTab = 'overview';
+
+function fmt(n){
+  const num = Number(n);
+  if(isNaN(num)) return '$0';
+  return '$' + Math.round(num).toLocaleString();
+}
+function pts(n){
+  const num = Number(n);
+  if(isNaN(num)) return '0.0';
+  return num.toFixed(1);
+}
+
+async function load(){
+  try{
+    const res = await fetch(APPS_SCRIPT_URL);
+    if(!res.ok) throw new Error('Request failed');
+    DATA = await res.json();
+    cleanData();
+    renderHeader();
+    renderTabs();
+    renderMain();
+  }catch(e){
+    document.getElementById('main').innerHTML = '<div class="error-msg">Could not load league data right now. Try refreshing the page in a minute.</div>';
+    document.getElementById('header-badges').innerHTML = '';
+  }
+}
+
+function cleanData(){
+  if(DATA.teamTotals){
+    DATA.teamTotals = DATA.teamTotals.filter(r => /^t\d+$/.test(r.TeamID));
+  }
+  if(DATA.standings){
+    DATA.standings = DATA.standings.filter(r => r.Place !== '' && r.Place !== undefined && r.Place !== null);
+  }
+}
+
+function teamName(id){
+  const t = (DATA.teams||[]).find(x=>x.TeamID===id);
+  return t ? t.TeamName : (id || '—');
+}
+
+function renderHeader(){
+  const d = DATA.dashboard || {};
+  document.getElementById('header-badges').innerHTML = `
+    <span class="badge">Week ${d.currentWeek ?? '—'}</span>
+    <span class="badge">Pot ${fmt(d.totalPot)}</span>
+    <span class="badge">Charity ${fmt(d.charityRaised)}</span>
+  `;
+}
+
+function renderTabs(){
+  const el = document.getElementById('tabs');
+  el.innerHTML = TABS.map(t=>`<button class="navbtn${t.id===activeTab?' active':''}" data-tab="${t.id}" style="--accent:var(${t.accent})">${t.label}</button>`).join('');
+  el.querySelectorAll('.navbtn').forEach(b=>{
+    b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; renderTabs(); renderMain(); });
+  });
+}
+
+function renderMain(){
+  const el = document.getElementById('main');
+  const renderers = {
+    overview: renderOverview, payouts: renderPayouts, talbot: renderTalbot,
+    survivor: renderSurvivor, wheel: renderWheel, charity: renderCharity,
+    standings: renderStandings, teams: renderTeams
+  };
+  el.innerHTML = renderers[activeTab]();
+}
+
+// ---------- OVERVIEW ----------
+function renderOverview(){
+  const d = DATA.dashboard || {};
+  const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>t.TeamName).sort();
+
+  return `
+  <h2 class="section-title">Season at a glance</h2>
+  <p class="section-sub">Live from the league sheet — updates whenever you reload this page.</p>
+
+  <div class="metric-grid">
+    <div class="metric"><span class="v accent-green">${fmt(d.weeklyPayoutsToDate)}</span><span class="l">Weekly payouts to date</span></div>
+    <div class="metric"><span class="v accent-amber">${fmt(d.talbotOutstanding)}</span><span class="l">Talbot toll outstanding</span></div>
+    <div class="metric"><span class="v accent-blue">${d.survivorRemaining ?? '—'}</span><span class="l">Survivor teams remaining</span></div>
+    <div class="metric"><span class="v accent-teal">${fmt(d.charityRaised)}</span><span class="l">Charity raised</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Highest score race</h3>
+    ${d.highScoreLeader ? `<p style="margin:0;"><span class="lead-name">${d.highScoreLeader}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
+      : `<p class="empty">No scores logged yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Survivor pool — still alive</h3>
+    ${survivorAlive.length ? `<div class="team-grid">${survivorAlive.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div>`
+      : `<p class="empty">Standings not available yet.</p>`}
+    ${d.survivorWinner ? `<p style="margin:12px 0 0;"><span class="pill tag-blue">Winner</span> <span class="lead-name">${d.survivorWinner}</span></p>` : ''}
+  </div>
+
+  <div class="card">
+    <h3>Charity</h3>
+    <p style="margin:0;">${fmt(DATA.charity ? DATA.charity.total : 0)} raised${DATA.charity && DATA.charity.name ? ` for <strong>${DATA.charity.name}</strong>` : ''}.</p>
+  </div>
+  `;
+}
+
+// ---------- PAYOUTS ----------
+function renderPayouts(){
+  const totals = (DATA.teamTotals||[]).slice().sort((a,b)=>Number(b.SeasonTotalPoints)-Number(a.SeasonTotalPoints));
+  const rows = totals.map(t=>`
+    <tr>
+      <td>${t.TeamName}</td>
+      <td class="num-cell">${pts(t.SeasonTotalPoints)}</td>
+      <td class="num-cell">${t.WeeksWon}</td>
+      <td class="num-cell">${fmt(t.WeeklyPayoutEarned)}</td>
+    </tr>
+  `).join('');
+
+  const weeks = {};
+  (DATA.weeklyScores||[]).forEach(row=>{
+    if(row.Won === 'Yes'){
+      weeks[row.Week] = weeks[row.Week] || [];
+      weeks[row.Week].push(teamName(row.TeamID));
+    }
+  });
+  const weekRows = Object.keys(weeks).map(Number).sort((a,b)=>a-b).map(w=>`
+    <tr><td>Week ${w}</td><td>${weeks[w].join(', ')}</td><td class="num-cell">${fmt(weeks[w].length*10)}</td></tr>
+  `).join('');
+
+  return `
+  <h2 class="section-title">Weekly payouts</h2>
+  <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
+
+  <div class="card">
+    <h3>Season standings by points</h3>
+    ${rows ? `<table><thead><tr><th>Team</th><th class="num-cell">Points</th><th class="num-cell">Weeks won</th><th class="num-cell">Earned</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">No scores logged yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Week-by-week winners</h3>
+    ${weekRows ? `<table><thead><tr><th>Week</th><th>Winners</th><th class="num-cell">Paid out</th></tr></thead><tbody>${weekRows}</tbody></table>`
+      : `<p class="empty">No weeks logged yet.</p>`}
+  </div>
+  `;
+}
+
+// ---------- TALBOT ----------
+function renderTalbot(){
+  const fines = (DATA.talbotToll||[]).slice().reverse();
+  const rows = fines.map(f=>`
+    <tr>
+      <td>Week ${f.Week}</td>
+      <td>${f.TeamName || teamName(f.TeamID)}</td>
+      <td class="num-cell">${fmt(f.Amount)}</td>
+      <td style="text-align:center;"><span class="pill ${f.Paid==='Yes'?'tag-green':'tag-amber'}">${f.Paid==='Yes'?'Paid':'Owed'}</span></td>
+    </tr>
+  `).join('');
+
+  const owed = (DATA.talbotToll||[]).filter(f=>f.Paid!=='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
+  const collected = (DATA.talbotToll||[]).filter(f=>f.Paid==='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
+
+  return `
+  <h2 class="section-title">The Talbot toll</h2>
+  <p class="section-sub">$5 for the first offense, doubling every offense after, per inactive player started.</p>
+
+  <div class="metric-grid">
+    <div class="metric"><span class="v accent-amber">${fmt(owed)}</span><span class="l">Currently owed</span></div>
+    <div class="metric"><span class="v accent-green">${fmt(collected)}</span><span class="l">Collected this season</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Fine log</h3>
+    ${rows ? `<table><thead><tr><th>Week</th><th>Team</th><th class="num-cell">Amount</th><th style="text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">No fines logged yet.</p>`}
+  </div>
+  `;
+}
+
+// ---------- SURVIVOR ----------
+function renderSurvivor(){
+  const s = DATA.survivor || [];
+  const rows = s.map(w=>`
+    <tr>
+      <td>Week ${w.week}</td>
+      <td class="num-cell">${w.lowestScore !== '' && w.lowestScore != null ? pts(w.lowestScore) : '—'}</td>
+      <td>${w.eliminatedTeamName || '—'}</td>
+    </tr>
+  `).join('');
+
+  const totals = DATA.teamTotals || [];
+  const alive = totals.filter(t=>t.SurvivorEliminated==='No').map(t=>t.TeamName).sort();
+  const eliminated = totals.filter(t=>t.SurvivorEliminated==='Yes').map(t=>t.TeamName).sort();
+  const d = DATA.dashboard || {};
+
+  return `
+  <h2 class="section-title">Survivor pool</h2>
+  <p class="section-sub">Lowest score each week is out, starting Week 1. Last team standing at Week 10 wins.</p>
+
+  <div class="card">
+    <h3>Still alive (${d.survivorRemaining ?? alive.length})</h3>
+    ${alive.length ? `<div class="team-grid">${alive.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div>` : `<p class="empty">No data yet.</p>`}
+    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${d.survivorWinner} wins Survivor</p>` : ''}
+  </div>
+
+  ${eliminated.length ? `<div class="card"><h3>Eliminated</h3><div class="team-grid">${eliminated.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div></div>` : ''}
+
+  <div class="card">
+    <h3>Week-by-week</h3>
+    ${rows ? `<table><thead><tr><th>Week</th><th class="num-cell">Lowest score</th><th>Eliminated</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">No weeks logged yet.</p>`}
+  </div>
+  `;
+}
+
+// ---------- WHEEL ----------
+function renderWheel(){
+  const wheel = DATA.wheel || {};
+  const punishments = (wheel.punishments||[]).filter(p=>typeof p.Slot === 'number' || p.Slot === 'CYOA');
+  const rows = punishments.map(p=>`
+    <tr>
+      <td>${p.TeamName || '—'}</td>
+      <td>${p.PunishmentText || '<span class="empty" style="padding:0;">Not submitted yet</span>'}</td>
+      <td style="text-align:center;">${p.BoughtDown==='Yes' ? `<span class="pill tag-amber">Bought down${p.BuyDownCost?' — '+fmt(p.BuyDownCost):''}</span>` : (p.BoughtDown==='N/A' ? '<span class="pill tag-violet">Always in</span>' : '—')}</td>
+    </tr>
+  `).join('');
+
+  const spin = wheel.spinResult || {};
+  const hasSpin = spin.teamId && spin.teamId !== '';
+
+  return `
+  <h2 class="section-title">Wheel of misfortune</h2>
+  <p class="section-sub">10 submitted punishments plus a guaranteed CYOA slot — no opt-out, no free pass.</p>
+
+  <div class="card">
+    <h3>Punishment list</h3>
+    ${rows ? `<table><thead><tr><th>Submitted by</th><th>Punishment</th><th style="text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">Nothing submitted yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Spin result</h3>
+    ${hasSpin ? `
+      <p style="margin:0 0 6px;"><span class="lead-name">${teamName(spin.teamId)}</span> — ${spin.outcome === 'cyoa' || spin.outcome === 'CYOA' ? 'landed on CYOA' : 'landed on a punishment'}</p>
+      <p style="margin:0;color:var(--text-soft);">${spin.detail || ''}</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        ${spin.buyoutUsed==='Yes' ? '<span class="pill tag-amber">Buyout used</span>' : ''}
+        ${spin.respinUsed==='Yes' ? '<span class="pill tag-violet">Respin used</span>' : ''}
+      </div>
+    ` : `<p class="empty">No spin logged yet.</p>`}
+  </div>
+  `;
+}
+
+// ---------- CHARITY ----------
+function renderCharity(){
+  const c = DATA.charity || {};
+  const rows = (c.donations||[]).slice().reverse().map(d=>`
+    <tr><td>${d.Date || ''}</td><td>${d.Source || ''}</td><td class="num-cell">${fmt(d.Amount)}</td><td>${d.Note || ''}</td></tr>
+  `).join('');
+
+  return `
+  <h2 class="section-title">Charity ledger</h2>
+  <p class="section-sub">Buy-down fees, punishment buyouts, and leftover Talbot toll all route here instead of to any league member.</p>
+
+  <div class="card">
+    <h3>Selected charity</h3>
+    <p style="margin:0;">${c.name || 'Not selected yet'}${c.selectedBy ? ` — chosen by ${c.selectedBy}` : ''}</p>
+  </div>
+
+  <div class="card">
+    <h3>Donation log — ${fmt(c.total)} total</h3>
+    ${rows ? `<table><thead><tr><th>Date</th><th>Source</th><th class="num-cell">Amount</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">No donations logged yet.</p>`}
+  </div>
+  `;
+}
+
+// ---------- STANDINGS ----------
+function renderStandings(){
+  const rows = (DATA.standings||[]).map(s=>`
+    <tr>
+      <td>${s.Place}</td>
+      <td>${s.TeamName || '—'}</td>
+      <td class="num-cell">${fmt(s.Payout)}</td>
+    </tr>
+  `).join('');
+
+  return `
+  <h2 class="section-title">Final standings</h2>
+  <p class="section-sub">Set once the championship wraps.</p>
+
+  <div class="card">
+    <table><thead><tr><th>Place</th><th>Team</th><th class="num-cell">Payout</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>
+  `;
+}
+
+// ---------- TEAMS ----------
+function renderTeams(){
+  const rows = (DATA.teams||[]).map(t=>`<tr><td>${t.TeamName}</td><td>${t.Owner || '—'}</td></tr>`).join('');
+  return `
+  <h2 class="section-title">Teams</h2>
+  <p class="section-sub">Roster of teams and owners for the season.</p>
+  <div class="card">
+    <table><thead><tr><th>Team</th><th>Owner</th></tr></thead><tbody>${rows}</tbody></table>
+  </div>
+  `;
+}
+
+load();
+</script>
+</body>
+</html>
