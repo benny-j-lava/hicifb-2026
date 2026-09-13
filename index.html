@@ -282,11 +282,48 @@ function computeLastPlace(){
   return {min, teams};
 }
 
+function computeNetEarnings(){
+  const totals = (DATA.teamTotals||[]).filter(t=>t.TeamID);
+  if(!totals.length) return [];
+
+  const talbotByTeam = {};
+  (DATA.talbotToll||[]).forEach(f=>{
+    talbotByTeam[f.TeamID] = (talbotByTeam[f.TeamID]||0) + Number(f.Amount||0);
+  });
+
+  const standingsByTeam = {};
+  (DATA.standings||[]).forEach(s=>{
+    if(s.TeamID && s.Payout) standingsByTeam[s.TeamID] = (standingsByTeam[s.TeamID]||0) + Number(s.Payout||0);
+  });
+
+  const d = DATA.dashboard || {};
+  const highScoreTeam = (DATA.teams||[]).find(t=>t.TeamName===d.highScoreLeader);
+  const survivorTeam = (DATA.teams||[]).find(t=>t.TeamName===d.survivorWinner);
+  const wheel = DATA.wheel || {};
+  const spin = wheel.spinResult || {};
+  const buyDownTotal = (wheel.punishments||[]).filter(p=>p.BoughtDown==='Yes').reduce((s,p)=>s+Number(p.BuyDownCost||0),0);
+  const buyoutTotal = spin.buyoutUsed === 'Yes' ? 150 : 0;
+
+  return totals.map(t=>{
+    const earned = Number(t.WeeklyPayoutEarned||0)
+      + (highScoreTeam && t.TeamID===highScoreTeam.TeamID ? 25 : 0)
+      + (survivorTeam && t.TeamID===survivorTeam.TeamID ? 25 : 0)
+      + (standingsByTeam[t.TeamID] || 0);
+    const spent = 150
+      + (talbotByTeam[t.TeamID] || 0)
+      + (t.TeamID === spin.teamId ? (buyDownTotal + buyoutTotal) : 0);
+    return { teamId: t.TeamID, name: teamName(t.TeamID), earned, spent, net: earned - spent };
+  });
+}
+
 function renderOverview(){
   const d = DATA.dashboard || {};
   const hasScores = d.highScoreLeader && Number(d.highScoreTotal) > 0;
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
   const lastPlace = hasScores ? computeLastPlace() : null;
+  const netEarnings = computeNetEarnings().sort((a,b)=>b.net-a.net);
+  const bestNet = netEarnings[0];
+  const worstNet = netEarnings[netEarnings.length-1];
 
   return `
   <h2 class="section-title" style="margin-bottom:18px;">Season at a glance</h2>
@@ -308,6 +345,15 @@ function renderOverview(){
     <h3>Wheel of misfortune watch</h3>
     ${lastPlace ? `<p style="margin:0;"><span class="lead-name" style="color:var(--violet);">${lastPlace.teams.join(' & ')}</span> ${lastPlace.teams.length>1?'are':'is'} currently on pace for the wheel, with ${pts(lastPlace.min)} points.</p>`
       : `<p class="empty">No scores logged yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Net earnings</h3>
+    ${bestNet && worstNet && bestNet.teamId !== worstNet.teamId ? `
+      <p style="margin:0 0 6px;"><span class="lead-name accent-green">${bestNet.name}</span> is most in the green, net ${fmt(bestNet.net)}.</p>
+      <p style="margin:0;"><span class="lead-name accent-amber">${worstNet.name}</span> is most in the red, net ${fmt(worstNet.net)}.</p>
+      <p class="section-sub" style="margin:10px 0 0;">Includes entry fees, Talbot Toll fines, and wheel buy-downs/buyout against every dollar earned back. See the Payouts tab for the full breakdown.</p>
+    ` : `<p class="empty">Not enough data yet.</p>`}
   </div>
 
   <div class="card">
@@ -347,6 +393,15 @@ function renderPayouts(){
     <tr><td>Week ${w}</td><td>${weeks[w].join(', ')}</td><td class="num-cell">${fmt(weeks[w].length*10)}</td></tr>
   `).join('');
 
+  const netRows = computeNetEarnings().sort((a,b)=>b.net-a.net).map(t=>`
+    <tr>
+      <td>${t.name}</td>
+      <td class="num-cell">${fmt(t.earned)}</td>
+      <td class="num-cell">${fmt(t.spent)}</td>
+      <td class="num-cell" style="font-weight:600;color:${t.net>=0?'var(--green)':'var(--amber)'};">${t.net>=0?'+':''}${fmt(t.net)}</td>
+    </tr>
+  `).join('');
+
   return `
   <h2 class="section-title">Weekly payouts</h2>
   <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
@@ -361,6 +416,13 @@ function renderPayouts(){
     <h3>Week-by-week winners</h3>
     ${weekRows ? `<table><thead><tr><th>Week</th><th>Winners</th><th class="num-cell">Paid out</th></tr></thead><tbody>${weekRows}</tbody></table>`
       : `<p class="empty">No weeks logged yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Net earnings by team</h3>
+    <p class="section-sub" style="margin-bottom:12px;">Earned = weekly payouts + Highest Score + Survivor + final standings, once each is determined. Spent = $150 entry fee + Talbot Toll fines + wheel buy-downs/buyout (only for the season's last-place team, once logged).</p>
+    ${netRows ? `<table><thead><tr><th>Team</th><th class="num-cell">Earned</th><th class="num-cell">Spent</th><th class="num-cell">Net</th></tr></thead><tbody>${netRows}</tbody></table>`
+      : `<p class="empty">No data yet.</p>`}
   </div>
   `;
 }
