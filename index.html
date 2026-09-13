@@ -23,7 +23,7 @@
     --gold:#8A6B12; --gold-bg:rgba(154,123,18,0.12);
   }
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme]){
       --bg:#15171B;
       --bg-elev:#1D2025;
       --text:#EDEDEB;
@@ -39,6 +39,21 @@
       --gold:#E4C368; --gold-bg:rgba(228,195,104,0.14);
     }
   }
+  :root[data-theme="dark"]{
+    --bg:#15171B;
+    --bg-elev:#1D2025;
+    --text:#EDEDEB;
+    --text-soft:#A0A6AD;
+    --text-muted:#6B7178;
+    --border:rgba(255,255,255,0.09);
+    --border-strong:rgba(255,255,255,0.18);
+    --green:#6FCF97; --green-bg:rgba(111,207,151,0.14);
+    --amber:#E8875B; --amber-bg:rgba(232,135,91,0.14);
+    --blue:#7FB2FF; --blue-bg:rgba(127,178,255,0.14);
+    --violet:#B79CE8; --violet-bg:rgba(183,156,232,0.14);
+    --teal:#5EEAD4; --teal-bg:rgba(94,234,212,0.14);
+    --gold:#E4C368; --gold-bg:rgba(228,195,104,0.14);
+  }
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -49,6 +64,14 @@
   }
   h1,h2,h3{font-family:'Sora',sans-serif;font-weight:600;margin:0;}
   .num{font-variant-numeric:tabular-nums;}
+
+  /* Focus states for keyboard navigation */
+  .navbtn:focus-visible, .link-btn:focus-visible, a:focus-visible, button:focus-visible{
+    outline:2px solid var(--text);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
   header{
     padding:22px 20px 16px;
     border-bottom:1px solid var(--border);
@@ -68,6 +91,36 @@
     padding:6px 12px;
     border-radius:20px;
   }
+  .badge-neutral{
+    background:var(--border);
+    color:var(--text-soft);
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:20px;
+  }
+  .theme-toggle{
+    display:flex;
+    gap:2px;
+    background:var(--border);
+    padding:3px;
+    border-radius:20px;
+  }
+  .theme-btn{
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:none;
+    background:none;
+    border-radius:16px;
+    color:var(--text-muted);
+    cursor:pointer;
+  }
+  .theme-btn svg{width:14px;height:14px;}
+  .theme-btn.active{background:var(--bg-elev);color:var(--text);}
+  .theme-btn:hover:not(.active){color:var(--text-soft);}
   .link-row{display:flex;gap:8px;flex-wrap:wrap;}
   .link-btn{
     display:inline-flex;
@@ -82,9 +135,11 @@
     padding:6px 12px;
     border-radius:20px;
     text-decoration:none;
+    cursor:pointer;
   }
   .link-btn:hover{background:var(--bg-elev);}
   .link-btn svg{width:12px;height:12px;flex:0 0 auto;}
+
   .team-grid{display:flex;flex-wrap:wrap;gap:8px;}
   .team-chip{
     background:var(--bg);
@@ -95,6 +150,7 @@
     padding:6px 12px;
     border-radius:8px;
   }
+
   nav{
     display:flex;
     gap:4px;
@@ -118,12 +174,26 @@
     white-space:nowrap;
   }
   .navbtn.active{color:var(--accent);border-bottom-color:var(--accent);}
+
   main{max-width:900px;margin:0 auto;padding:24px 18px 70px;}
   .panel{display:none;}
   .panel.active{display:block;animation:fade 0.15s ease;}
   @keyframes fade{from{opacity:0;}to{opacity:1;}}
+
   .section-title{font-size:20px;margin-bottom:4px;}
+  .section-title.with-accent{border-left:3px solid var(--accent, var(--text));padding-left:12px;}
   .section-sub{color:var(--text-soft);font-size:13.5px;margin:0 0 18px;}
+
+  .subgroup-title{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--text-muted);
+    font-weight:600;
+    margin:24px 0 10px;
+  }
+  .subgroup-title:first-of-type{margin-top:20px;}
+
   .card{
     background:var(--bg-elev);
     border:1px solid var(--border);
@@ -134,25 +204,45 @@
     -webkit-overflow-scrolling:touch;
   }
   .card h3{font-size:14px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.04em;font-family:'Inter',sans-serif;font-weight:600;margin-bottom:12px;}
-  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px;}
   .metric{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
   .metric .v{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;display:block;}
   .metric .l{font-size:12px;color:var(--text-muted);margin-top:2px;}
+
+  .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:4px;align-items:start;}
+  .feature-card{margin-bottom:0;}
+  .feature-label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:600;margin-bottom:8px;}
+  .feature-value{font-family:'Sora',sans-serif;font-size:19px;font-weight:600;line-height:1.3;}
+  .feature-sub{font-size:12.5px;color:var(--text-soft);margin-top:4px;}
+
   table{width:100%;min-width:460px;border-collapse:collapse;font-size:13.5px;}
   th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:6px 8px;border-bottom:1px solid var(--border-strong);white-space:nowrap;}
   td{padding:9px 8px;border-bottom:1px solid var(--border);}
   tr:last-child td{border-bottom:none;}
   .num-cell{text-align:right;font-variant-numeric:tabular-nums;}
   .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
-  .empty{color:var(--text-muted);font-size:13.5px;font-style:italic;padding:12px 0;}
+  .empty{color:var(--text-muted);font-size:13.5px;font-style:italic;padding:12px 0;margin:0;}
   .tag-green{background:var(--green-bg);color:var(--green);}
   .tag-amber{background:var(--amber-bg);color:var(--amber);}
   .tag-blue{background:var(--blue-bg);color:var(--blue);}
   .tag-violet{background:var(--violet-bg);color:var(--violet);}
   .tag-teal{background:var(--teal-bg);color:var(--teal);}
   .tag-gold{background:var(--gold-bg);color:var(--gold);}
-  .loading, .error-msg{padding:60px 20px;text-align:center;color:var(--text-soft);}
-  .error-msg{color:var(--amber);}
+
+  .loading{padding:70px 20px;text-align:center;color:var(--text-soft);}
+  .spinner{
+    width:26px;height:26px;
+    border:3px solid var(--border-strong);
+    border-top-color:var(--text-soft);
+    border-radius:50%;
+    margin:0 auto 14px;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error-msg{padding:60px 20px;text-align:center;}
+  .error-msg p{color:var(--amber);margin:0 0 14px;}
+
   .lead-name{font-family:'Sora',sans-serif;font-weight:600;}
   .accent-green{color:var(--green);}
   .accent-amber{color:var(--amber);}
@@ -167,8 +257,11 @@
 <header>
   <h1>Huck It Chuck It Football</h1>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
-    <div class="badges" id="header-badges">
-      <span class="badge">Loading…</span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+      <div class="theme-toggle" id="theme-toggle"></div>
+      <div class="badges" id="header-badges">
+        <span class="badge-neutral">Loading…</span>
+      </div>
     </div>
     <div class="link-row">
       <a class="link-btn" href="https://football.fantasysports.yahoo.com/f1/916694" target="_blank" rel="noopener">
@@ -184,7 +277,7 @@
 </header>
 
 <nav id="tabs"></nav>
-<main id="main"><div class="loading">Loading league data…</div></main>
+<main id="main"><div class="loading"><div class="spinner"></div><p>Loading league data…</p></div></main>
 
 <script>
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWtG0XWPUbC7nZpgRDntfXKofSJaysxnKWcYgoAjcAiBOg-CUFexBDH7ZdwI1Xa9Y/exec";
@@ -202,6 +295,35 @@ const TABS = [
 
 let DATA = null;
 let activeTab = 'overview';
+let themeMode = 'system'; // 'system' | 'light' | 'dark'
+
+const THEME_ICONS = {
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+  system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+};
+
+function applyTheme(){
+  if(themeMode === 'system'){
+    document.documentElement.removeAttribute('data-theme');
+  }else{
+    document.documentElement.setAttribute('data-theme', themeMode);
+  }
+  renderThemeToggle();
+}
+
+function renderThemeToggle(){
+  const el = document.getElementById('theme-toggle');
+  if(!el) return;
+  el.innerHTML = ['light','system','dark'].map(mode=>
+    `<button class="theme-btn${themeMode===mode?' active':''}" data-mode="${mode}" aria-label="${mode} mode" title="${mode.charAt(0).toUpperCase()+mode.slice(1)} mode">${THEME_ICONS[mode]}</button>`
+  ).join('');
+  el.querySelectorAll('.theme-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{ themeMode = b.dataset.mode; applyTheme(); });
+  });
+}
+
+applyTheme();
 
 function fmt(n){
   const num = Number(n);
@@ -212,6 +334,11 @@ function pts(n){
   const num = Number(n);
   if(isNaN(num)) return '0.0';
   return num.toFixed(1);
+}
+function fmtSigned(n){
+  const num = Math.round(Number(n)||0);
+  const sign = num < 0 ? '-' : '+';
+  return sign + '$' + Math.abs(num).toLocaleString();
 }
 
 async function load(){
@@ -224,7 +351,12 @@ async function load(){
     renderTabs();
     renderMain();
   }catch(e){
-    document.getElementById('main').innerHTML = '<div class="error-msg">Could not load league data right now. Try refreshing the page in a minute.</div>';
+    document.getElementById('main').innerHTML = `
+      <div class="error-msg">
+        <p>Could not load league data right now.</p>
+        <button class="link-btn" onclick="location.reload()">Try again</button>
+      </div>
+    `;
     document.getElementById('header-badges').innerHTML = '';
   }
 }
@@ -242,14 +374,11 @@ function teamName(id){
   const t = (DATA.teams||[]).find(x=>x.TeamID===id);
   return t ? t.TeamName : (id || '—');
 }
-function nameWithOwner(name){
-  return name;
-}
 
 function renderHeader(){
   const d = DATA.dashboard || {};
   document.getElementById('header-badges').innerHTML = `
-    <span class="badge">Week ${d.currentWeek ?? '—'}</span>
+    <span class="badge-neutral">Week ${d.currentWeek ?? '—'}</span>
     <span class="badge">Pot ${fmt(d.totalPot)}</span>
     <span class="badge">Charity ${fmt(d.charityRaised)}</span>
   `;
@@ -271,6 +400,11 @@ function renderMain(){
     standings: renderStandings, teams: renderTeams
   };
   el.innerHTML = renderers[activeTab]();
+}
+
+// Consistent title helper: category-colored left accent, used on every tab except Overview/Teams.
+function titleWithAccent(text, cssVar){
+  return `<h2 class="section-title with-accent" style="--accent:var(${cssVar});">${text}</h2>`;
 }
 
 // ---------- OVERVIEW ----------
@@ -321,51 +455,63 @@ function renderOverview(){
   const hasScores = d.highScoreLeader && Number(d.highScoreTotal) > 0;
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
   const lastPlace = hasScores ? computeLastPlace() : null;
+  const talbotCollected = (DATA.talbotToll||[]).filter(f=>f.Paid==='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
   const netEarnings = computeNetEarnings().sort((a,b)=>b.net-a.net);
   const bestNet = netEarnings[0];
   const worstNet = netEarnings[netEarnings.length-1];
+  const hasNetSpread = bestNet && worstNet && bestNet.net !== worstNet.net;
 
   return `
   <h2 class="section-title" style="margin-bottom:18px;">Season at a glance</h2>
 
   <div class="metric-grid">
     <div class="metric"><span class="v accent-green">${fmt(d.weeklyPayoutsToDate)}</span><span class="l">Weekly payouts to date</span></div>
-    <div class="metric"><span class="v accent-amber">${fmt(d.talbotOutstanding)}</span><span class="l">Talbot toll outstanding</span></div>
+    <div class="metric"><span class="v accent-amber">${fmt(talbotCollected)}</span><span class="l">Talbot tolls collected</span></div>
     <div class="metric"><span class="v accent-blue">${d.survivorRemaining ?? '—'}</span><span class="l">Survivor teams remaining</span></div>
     <div class="metric"><span class="v accent-teal">${fmt(d.charityRaised)}</span><span class="l">Charity raised</span></div>
   </div>
 
-  <div class="card">
-    <h3>Highest score race</h3>
-    ${hasScores ? `<p style="margin:0;"><span class="lead-name">${nameWithOwner(d.highScoreLeader)}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
-      : `<p class="empty">No scores logged yet.</p>`}
+  <div class="subgroup-title">Points race</div>
+  <div class="feature-grid">
+    <div class="card feature-card">
+      <div class="feature-label">Highest score race</div>
+      ${hasScores
+        ? `<div class="feature-value">${d.highScoreLeader}</div><div class="feature-sub">${pts(d.highScoreTotal)} points this season</div>`
+        : `<p class="empty">No scores logged yet.</p>`}
+    </div>
+    <div class="card feature-card">
+      <div class="feature-label" style="color:var(--violet);">Wheel of misfortune watch</div>
+      ${lastPlace
+        ? `<div class="feature-value">${lastPlace.teams.join(' & ')}</div><div class="feature-sub">${pts(lastPlace.min)} points — currently ${lastPlace.teams.length>1?'tied for ':''}last</div>`
+        : `<p class="empty">No scores logged yet.</p>`}
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Wheel of misfortune watch</h3>
-    ${lastPlace ? `<p style="margin:0;"><span class="lead-name" style="color:var(--violet);">${lastPlace.teams.join(' & ')}</span> ${lastPlace.teams.length>1?'are':'is'} currently on pace for the wheel, with ${pts(lastPlace.min)} points.</p>`
-      : `<p class="empty">No scores logged yet.</p>`}
-  </div>
-
+  <div class="subgroup-title">Money</div>
   <div class="card">
     <h3>Net earnings</h3>
-    ${bestNet && worstNet && bestNet.teamId !== worstNet.teamId ? `
-      <p style="margin:0 0 6px;"><span class="lead-name accent-green">${bestNet.name}</span> is most in the green, net ${fmt(bestNet.net)}.</p>
-      <p style="margin:0;"><span class="lead-name accent-amber">${worstNet.name}</span> is most in the red, net ${fmt(worstNet.net)}.</p>
-      <p class="section-sub" style="margin:10px 0 0;">Includes entry fees, Talbot Toll fines, and wheel buy-downs/buyout against every dollar earned back. See the Payouts tab for the full breakdown.</p>
-    ` : `<p class="empty">Not enough data yet.</p>`}
+    ${hasNetSpread ? `
+      <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <div>
+          <div class="feature-label" style="color:var(--green);">Highest</div>
+          <div class="feature-value">${bestNet.name}</div>
+          <div class="feature-sub" style="color:var(--green);font-weight:600;">${fmtSigned(bestNet.net)}</div>
+        </div>
+        <div>
+          <div class="feature-label" style="color:var(--amber);">Lowest</div>
+          <div class="feature-value">${worstNet.name}</div>
+          <div class="feature-sub" style="color:var(--amber);font-weight:600;">${fmtSigned(worstNet.net)}</div>
+        </div>
+      </div>
+    ` : `<p class="empty">Everyone's even so far.</p>`}
   </div>
 
+  <div class="subgroup-title">Pools</div>
   <div class="card">
     <h3>Survivor pool — still alive</h3>
     ${survivorAlive.length ? `<div class="team-grid">${survivorAlive.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div>`
-      : `<p class="empty">Standings not available yet.</p>`}
-    ${d.survivorWinner ? `<p style="margin:12px 0 0;"><span class="pill tag-blue">Winner</span> <span class="lead-name">${d.survivorWinner}</span></p>` : ''}
-  </div>
-
-  <div class="card">
-    <h3>Charity</h3>
-    <p style="margin:0;">${fmt(DATA.charity ? DATA.charity.total : 0)} raised${DATA.charity && DATA.charity.name ? ` for <strong>${DATA.charity.name}</strong>` : ''}.</p>
+      : `<p class="empty">No data yet.</p>`}
+    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${d.survivorWinner} wins Survivor</p>` : ''}
   </div>
   `;
 }
@@ -398,12 +544,12 @@ function renderPayouts(){
       <td>${t.name}</td>
       <td class="num-cell">${fmt(t.earned)}</td>
       <td class="num-cell">${fmt(t.spent)}</td>
-      <td class="num-cell" style="font-weight:600;color:${t.net>=0?'var(--green)':'var(--amber)'};">${t.net>=0?'+':''}${fmt(t.net)}</td>
+      <td class="num-cell" style="font-weight:600;color:${t.net>=0?'var(--green)':'var(--amber)'};">${fmtSigned(t.net)}</td>
     </tr>
   `).join('');
 
   return `
-  <h2 class="section-title">Weekly payouts</h2>
+  ${titleWithAccent('Weekly payouts', '--green')}
   <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
 
   <div class="card">
@@ -443,7 +589,7 @@ function renderTalbot(){
   const collected = (DATA.talbotToll||[]).filter(f=>f.Paid==='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
 
   return `
-  <h2 class="section-title">The Talbot toll</h2>
+  ${titleWithAccent('The Talbot toll', '--amber')}
   <p class="section-sub">$5 for the first offense, doubling every offense after, per inactive player started.</p>
 
   <div class="metric-grid">
@@ -451,7 +597,7 @@ function renderTalbot(){
     <div class="metric"><span class="v accent-green">${fmt(collected)}</span><span class="l">Collected this season</span></div>
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-top:14px;">
     <h3>Fine log</h3>
     ${rows ? `<table><thead><tr><th>Week</th><th>Team</th><th class="num-cell">Amount</th><th style="text-align:center;">Status</th></tr></thead><tbody>${rows}</tbody></table>`
       : `<p class="empty">No fines logged yet.</p>`}
@@ -476,13 +622,13 @@ function renderSurvivor(){
   const d = DATA.dashboard || {};
 
   return `
-  <h2 class="section-title">Survivor pool</h2>
+  ${titleWithAccent('Survivor pool', '--blue')}
   <p class="section-sub">Lowest score each week is out, starting Week 1. Last team standing at Week 10 wins.</p>
 
   <div class="card">
     <h3>Still alive (${d.survivorRemaining ?? alive.length})</h3>
     ${alive.length ? `<div class="team-grid">${alive.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div>` : `<p class="empty">No data yet.</p>`}
-    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${nameWithOwner(d.survivorWinner)} wins Survivor</p>` : ''}
+    ${d.survivorWinner ? `<p style="margin:12px 0 0;font-family:'Sora',sans-serif;font-weight:600;color:var(--blue);">${d.survivorWinner} wins Survivor</p>` : ''}
   </div>
 
   ${eliminated.length ? `<div class="card"><h3>Eliminated</h3><div class="team-grid">${eliminated.map(n=>`<span class="team-chip">${n}</span>`).join('')}</div></div>` : ''}
@@ -500,7 +646,6 @@ function escapeHtml(str){
 }
 function linkify(text){
   if(!text) return '';
-  const urlPattern = /(https?:\/\/[^\s]+)/g;
   const escaped = escapeHtml(text);
   return escaped.replace(/(https?:\/\/[^\s]+)/g, url => {
     const clean = url.replace(/[.,;:)]+$/, '');
@@ -525,7 +670,7 @@ function renderWheel(){
   const hasSpin = spin.teamId && spin.teamId !== '';
 
   return `
-  <h2 class="section-title">Wheel of misfortune</h2>
+  ${titleWithAccent('Wheel of misfortune', '--violet')}
   <p class="section-sub">10 submitted punishments plus a guaranteed CYOA slot — no opt-out, no free pass.</p>
 
   <div class="card">
@@ -556,7 +701,7 @@ function renderCharity(){
   `).join('');
 
   return `
-  <h2 class="section-title">Charity ledger</h2>
+  ${titleWithAccent('Charity ledger', '--teal')}
   <p class="section-sub">Buy-down fees, punishment buyouts, and leftover Talbot toll all route here instead of to any league member.</p>
 
   <div class="card">
@@ -583,11 +728,12 @@ function renderStandings(){
   `).join('');
 
   return `
-  <h2 class="section-title">Final standings</h2>
+  ${titleWithAccent('Final standings', '--gold')}
   <p class="section-sub">Set once the championship wraps.</p>
 
   <div class="card">
-    <table><thead><tr><th>Place</th><th>Team</th><th class="num-cell">Payout</th></tr></thead><tbody>${rows}</tbody></table>
+    ${rows ? `<table><thead><tr><th>Place</th><th>Team</th><th class="num-cell">Payout</th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<p class="empty">Final standings not set yet.</p>`}
   </div>
   `;
 }
