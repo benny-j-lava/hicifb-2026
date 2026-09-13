@@ -274,10 +274,19 @@ function renderMain(){
 }
 
 // ---------- OVERVIEW ----------
+function computeLastPlace(){
+  const totals = (DATA.teamTotals||[]).filter(t => t.TeamID);
+  if(!totals.length) return null;
+  const min = Math.min(...totals.map(t=>Number(t.SeasonTotalPoints||0)));
+  const teams = totals.filter(t=>Number(t.SeasonTotalPoints||0)===min).map(t=>teamName(t.TeamID));
+  return {min, teams};
+}
+
 function renderOverview(){
   const d = DATA.dashboard || {};
-  const hasHighScore = d.highScoreLeader && Number(d.highScoreTotal) > 0;
+  const hasScores = d.highScoreLeader && Number(d.highScoreTotal) > 0;
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
+  const lastPlace = hasScores ? computeLastPlace() : null;
 
   return `
   <h2 class="section-title" style="margin-bottom:18px;">Season at a glance</h2>
@@ -291,7 +300,13 @@ function renderOverview(){
 
   <div class="card">
     <h3>Highest score race</h3>
-    ${hasHighScore ? `<p style="margin:0;"><span class="lead-name">${nameWithOwner(d.highScoreLeader)}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
+    ${hasScores ? `<p style="margin:0;"><span class="lead-name">${nameWithOwner(d.highScoreLeader)}</span> leads with ${pts(d.highScoreTotal)} points this season.</p>`
+      : `<p class="empty">No scores logged yet.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Wheel of misfortune watch</h3>
+    ${lastPlace ? `<p style="margin:0;"><span class="lead-name" style="color:var(--violet);">${lastPlace.teams.join(' & ')}</span> ${lastPlace.teams.length>1?'are':'is'} currently on pace for the wheel, with ${pts(lastPlace.min)} points.</p>`
       : `<p class="empty">No scores logged yet.</p>`}
   </div>
 
