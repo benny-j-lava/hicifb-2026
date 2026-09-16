@@ -239,10 +239,32 @@
   .feature-value{font-family:'Sora',sans-serif;font-size:19px;font-weight:600;line-height:1.3;}
   .feature-sub{font-size:12.5px;color:var(--text-soft);margin-top:4px;}
 
-  table{width:100%;min-width:460px;border-collapse:collapse;font-size:13.5px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;table-layout:auto;}
   th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:6px 8px;border-bottom:1px solid var(--border-strong);white-space:nowrap;}
-  td{padding:9px 8px;border-bottom:1px solid var(--border);}
+  td{padding:9px 8px;border-bottom:1px solid var(--border);overflow-wrap:anywhere;}
   tr:last-child td{border-bottom:none;}
+  @media (max-width:600px){
+    table{font-size:12.5px;}
+    th{font-size:10px;padding:5px 5px;}
+    td{padding:7px 5px;}
+  }
+  .net-cards{display:none;}
+  .net-card{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    background:var(--bg-elev);
+  }
+  .net-card:last-child{margin-bottom:0;}
+  .net-card-name{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;margin-bottom:8px;}
+  .net-card-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px;border-bottom:1px solid var(--border);}
+  .net-card-row:last-child{border-bottom:none;}
+  .net-card-row .label{color:var(--text-soft);}
+  @media (max-width:560px){
+    .net-table-wrap{display:none;}
+    .net-cards{display:block;}
+  }
   tbody tr{transition:background-color 0.1s ease;}
   tbody tr:hover{background-color:var(--border);}
   .num-cell{text-align:right;font-variant-numeric:tabular-nums;}
@@ -659,6 +681,19 @@ function renderPayouts(){
     </tr>
   `).join('');
 
+  // Same data as a stacked card layout, shown instead of the table on narrow screens
+  // where six columns would otherwise get squeezed unreadably thin.
+  const netCards = computeNetEarnings().sort((a,b)=>b.net-a.net).map(t=>`
+    <div class="net-card">
+      <div class="net-card-name">${t.name}</div>
+      <div class="net-card-row"><span class="label">Earned</span><span>${fmt(t.earned)}</span></div>
+      <div class="net-card-row"><span class="label">Spent</span><span>${fmt(t.spent)}</span></div>
+      <div class="net-card-row"><span class="label">Net</span><span style="font-weight:600;color:${t.net>=0?'var(--green)':'var(--amber)'};">${fmtSigned(t.net)}</span></div>
+      <div class="net-card-row"><span class="label">Paid</span><span>${fmt(t.paid)}</span></div>
+      <div class="net-card-row"><span class="label">Still owed</span><span style="${t.owed>0?'color:var(--amber);font-weight:600;':''}">${t.owed>0?fmt(t.owed):'Settled'}</span></div>
+    </div>
+  `).join('');
+
   return `
   ${titleWithAccent('Weekly payouts', '--green')}
   <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
@@ -679,8 +714,10 @@ function renderPayouts(){
   <div class="card">
     <h3>Net earnings by team</h3>
     <p class="section-sub" style="margin-bottom:12px;">Earned = weekly payouts + Highest Score + Survivor + final standings, once each is determined. Spent = $150 entry fee + Talbot Toll fines + wheel buy-downs/buyout (only for the season's last-place team, once logged). Paid/Still owed tracks actual prize money sent, separate from what's owed to the league.</p>
-    ${netRows ? `<table><thead><tr><th>Team</th><th class="num-cell">Earned</th><th class="num-cell">Spent</th><th class="num-cell">Net</th><th class="num-cell">Paid</th><th class="num-cell">Still owed</th></tr></thead><tbody>${netRows}</tbody></table>`
-      : `<p class="empty">No data yet.</p>`}
+    ${netRows ? `
+      <div class="net-table-wrap"><table><thead><tr><th>Team</th><th class="num-cell">Earned</th><th class="num-cell">Spent</th><th class="num-cell">Net</th><th class="num-cell">Paid</th><th class="num-cell">Still owed</th></tr></thead><tbody>${netRows}</tbody></table></div>
+      <div class="net-cards">${netCards}</div>
+    ` : `<p class="empty">No data yet.</p>`}
   </div>
   `;
 }
