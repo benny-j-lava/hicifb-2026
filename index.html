@@ -12,7 +12,7 @@
     --bg-elev:#FFFFFF;
     --text:#15171B;
     --text-soft:#5B6169;
-    --text-muted:#8A9098;
+    --text-muted:#686E76;
     --border:rgba(21,23,27,0.10);
     --border-strong:rgba(21,23,27,0.20);
     --green:#1E7D53; --green-bg:rgba(30,125,83,0.10);
@@ -28,7 +28,7 @@
       --bg-elev:#1D2025;
       --text:#EDEDEB;
       --text-soft:#A0A6AD;
-      --text-muted:#6B7178;
+      --text-muted:#8B9299;
       --border:rgba(255,255,255,0.09);
       --border-strong:rgba(255,255,255,0.18);
       --green:#6FCF97; --green-bg:rgba(111,207,151,0.14);
@@ -44,7 +44,7 @@
     --bg-elev:#1D2025;
     --text:#EDEDEB;
     --text-soft:#A0A6AD;
-    --text-muted:#6B7178;
+    --text-muted:#8B9299;
     --border:rgba(255,255,255,0.09);
     --border-strong:rgba(255,255,255,0.18);
     --green:#6FCF97; --green-bg:rgba(111,207,151,0.14);
@@ -82,7 +82,7 @@
     flex-wrap:wrap;
   }
   header h1{font-size:clamp(20px,4vw,26px);}
-  .badges{display:flex;gap:10px;flex-wrap:wrap;}
+  .badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
   .badge{
     background:var(--gold-bg);
     color:var(--gold);
@@ -159,15 +159,27 @@
     border-radius:8px;
   }
 
+  .nav-wrap{position:relative;border-bottom:1px solid var(--border);}
   nav{
     display:flex;
     gap:4px;
     overflow-x:auto;
     padding:10px 16px 0;
-    border-bottom:1px solid var(--border);
     scrollbar-width:none;
   }
   nav::-webkit-scrollbar{display:none;}
+  .nav-fade{
+    position:absolute;
+    top:0;
+    bottom:1px;
+    width:28px;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.15s ease;
+  }
+  .nav-fade.visible{opacity:1;}
+  .nav-fade-left{left:0;background:linear-gradient(90deg, var(--bg) 0%, transparent 100%);}
+  .nav-fade-right{right:0;background:linear-gradient(270deg, var(--bg) 0%, transparent 100%);}
   .navbtn{
     flex:0 0 auto;
     background:none;
@@ -213,7 +225,10 @@
   }
   .card h3{font-size:14px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.04em;font-family:'Inter',sans-serif;font-weight:600;margin-bottom:12px;}
 
-  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:4px;}
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:4px;}
+  @media (min-width:520px){
+    .metric-grid{grid-template-columns:repeat(3,1fr);}
+  }
   .metric{background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
   .metric .v{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;display:block;}
   .metric .l{font-size:12px;color:var(--text-muted);margin-top:2px;}
@@ -228,6 +243,8 @@
   th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);padding:6px 8px;border-bottom:1px solid var(--border-strong);white-space:nowrap;}
   td{padding:9px 8px;border-bottom:1px solid var(--border);}
   tr:last-child td{border-bottom:none;}
+  tbody tr{transition:background-color 0.1s ease;}
+  tbody tr:hover{background-color:var(--border);}
   .num-cell{text-align:right;font-variant-numeric:tabular-nums;}
   .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
   .empty{color:var(--text-muted);font-size:13.5px;font-style:italic;padding:12px 0;margin:0;}
@@ -264,12 +281,10 @@
 
 <header>
   <h1>Huck It Chuck It Football</h1>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
-      <div class="theme-toggle" id="theme-toggle"></div>
-      <div class="badges" id="header-badges">
-        <span class="badge-neutral">Loading…</span>
-      </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+    <div class="theme-toggle" id="theme-toggle"></div>
+    <div class="badges" id="header-badges">
+      <span class="badge-neutral">Loading…</span>
     </div>
     <div class="link-row">
       <a class="link-btn" href="https://football.fantasysports.yahoo.com/f1/916694" target="_blank" rel="noopener">
@@ -284,7 +299,11 @@
   </div>
 </header>
 
-<nav id="tabs"></nav>
+<div class="nav-wrap">
+  <nav id="tabs"></nav>
+  <div class="nav-fade nav-fade-left" id="nav-fade-left"></div>
+  <div class="nav-fade nav-fade-right" id="nav-fade-right"></div>
+</div>
 <main id="main"><div class="loading"><div class="spinner"></div><p>Loading league data…</p></div></main>
 
 <script>
@@ -430,13 +449,34 @@ function renderHeader(){
   `;
 }
 
+function updateNavFades(){
+  const el = document.getElementById('tabs');
+  const left = document.getElementById('nav-fade-left');
+  const right = document.getElementById('nav-fade-right');
+  if(!el || !left || !right) return;
+  const maxScroll = el.scrollWidth - el.clientWidth;
+  left.classList.toggle('visible', el.scrollLeft > 4);
+  right.classList.toggle('visible', el.scrollLeft < maxScroll - 4);
+}
+
 function renderTabs(){
   const el = document.getElementById('tabs');
   el.innerHTML = TABS.map(t=>`<button class="navbtn${t.id===activeTab?' active':''}" data-tab="${t.id}" style="--accent:var(${t.accent})">${t.label}</button>`).join('');
   el.querySelectorAll('.navbtn').forEach(b=>{
-    b.addEventListener('click', ()=>{ activeTab=b.dataset.tab; renderTabs(); renderMain(); });
+    b.addEventListener('click', ()=>{
+      activeTab=b.dataset.tab;
+      renderTabs();
+      renderMain();
+    });
   });
+  el.removeEventListener('scroll', updateNavFades);
+  el.addEventListener('scroll', updateNavFades);
+  // Keep the active tab in view, and let layout settle before measuring fades.
+  const activeBtn = el.querySelector('.navbtn.active');
+  if(activeBtn) activeBtn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  setTimeout(updateNavFades, 0);
 }
+window.addEventListener('resize', updateNavFades);
 
 function renderMain(){
   const el = document.getElementById('main');
