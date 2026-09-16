@@ -99,6 +99,14 @@
     padding:6px 12px;
     border-radius:20px;
   }
+  .badge-warning{
+    background:var(--amber-bg);
+    color:var(--amber);
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:20px;
+  }
   .theme-toggle{
     display:flex;
     gap:2px;
@@ -340,6 +348,10 @@ function fmtSigned(n){
   const sign = num < 0 ? '-' : '+';
   return sign + '$' + Math.abs(num).toLocaleString();
 }
+function formatTiedNames(names){
+  if(names.length <= 2) return names.join(' & ');
+  return `${names.length} teams tied`;
+}
 
 async function load(){
   try{
@@ -375,10 +387,44 @@ function teamName(id){
   return t ? t.TeamName : (id || '—');
 }
 
+// Week 1 begins the Tuesday before the 2026 season's Wednesday opener (Sep 9).
+// Each subsequent week is a standard Tuesday-to-Monday NFL week. Weeks 1-14 are
+// the regular season for this league; weeks 15-17 are the 3-round playoffs.
+const SEASON_WEEK1_START = new Date(2026, 8, 8); // Sep 8, 2026 (month is 0-indexed)
+const REGULAR_SEASON_WEEKS = 14;
+const LAST_WEEK = 17;
+
+function getCurrentWeekInfo(){
+  const now = new Date();
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  let weekNum = Math.floor((now - SEASON_WEEK1_START) / msPerWeek) + 1;
+  if(weekNum < 1) weekNum = 1;
+  if(weekNum > LAST_WEEK) weekNum = LAST_WEEK;
+  const isPlayoffs = weekNum > REGULAR_SEASON_WEEKS;
+  return { week: weekNum, isPlayoffs };
+}
+
+function getLatestLoggedWeek(){
+  const weeks = (DATA.weeklyScores||[]).map(r=>Number(r.Week)).filter(n=>!isNaN(n));
+  return weeks.length ? Math.max(...weeks) : 0;
+}
+
+// "Stale" means the Sheet is missing at least one full week of scores relative
+// to the calendar -- being one week behind is normal (this week isn't over yet).
+function getDataFreshness(){
+  const wk = getCurrentWeekInfo();
+  const latestLogged = getLatestLoggedWeek();
+  const weeksBehind = wk.week - latestLogged;
+  return { ...wk, latestLogged, weeksBehind, isStale: weeksBehind >= 2 };
+}
+
 function renderHeader(){
   const d = DATA.dashboard || {};
+  const fresh = getDataFreshness();
+  const weekLabel = fresh.isPlayoffs ? `Playoffs · Wk ${fresh.week}` : `Week ${fresh.week}`;
   document.getElementById('header-badges').innerHTML = `
-    <span class="badge-neutral">Week ${d.currentWeek ?? '—'}</span>
+    <span class="badge-neutral">${weekLabel}</span>
+    ${fresh.isStale ? `<span class="badge-warning">Data from Wk ${fresh.latestLogged}</span>` : ''}
     <span class="badge">Pot ${fmt(d.totalPot)}</span>
     <span class="badge">Charity ${fmt(d.charityRaised)}</span>
   `;
@@ -431,6 +477,7 @@ function computeNetEarnings(){
   });
 
   const d = DATA.dashboard || {};
+  const seasonConcluded = (DATA.standings||[]).some(s => s.TeamID);
   const highScoreTeam = (DATA.teams||[]).find(t=>t.TeamName===d.highScoreLeader);
   const survivorTeam = (DATA.teams||[]).find(t=>t.TeamName===d.survivorWinner);
   const wheel = DATA.wheel || {};
@@ -440,13 +487,15 @@ function computeNetEarnings(){
 
   return totals.map(t=>{
     const earned = Number(t.WeeklyPayoutEarned||0)
-      + (highScoreTeam && t.TeamID===highScoreTeam.TeamID ? 25 : 0)
+      + (seasonConcluded && highScoreTeam && t.TeamID===highScoreTeam.TeamID ? 25 : 0)
       + (survivorTeam && t.TeamID===survivorTeam.TeamID ? 25 : 0)
       + (standingsByTeam[t.TeamID] || 0);
     const spent = 150
       + (talbotByTeam[t.TeamID] || 0)
       + (t.TeamID === spin.teamId ? (buyDownTotal + buyoutTotal) : 0);
-    return { teamId: t.TeamID, name: teamName(t.TeamID), earned, spent, net: earned - spent };
+    const paid = Number(t.AmountPaid || 0);
+    const owed = Math.max(earned - paid, 0);
+    return { teamId: t.TeamID, name: teamName(t.TeamID), earned, spent, net: earned - spent, paid, owed };
   });
 }
 
@@ -457,18 +506,25 @@ function renderOverview(){
   const lastPlace = hasScores ? computeLastPlace() : null;
   const talbotCollected = (DATA.talbotToll||[]).filter(f=>f.Paid==='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
   const netEarnings = computeNetEarnings().sort((a,b)=>b.net-a.net);
-  const bestNet = netEarnings[0];
-  const worstNet = netEarnings[netEarnings.length-1];
-  const hasNetSpread = bestNet && worstNet && bestNet.net !== worstNet.net;
+  const prizeOutstanding = netEarnings.reduce((s,t)=>s+t.owed, 0);
+  const bestNetValue = netEarnings.length ? netEarnings[0].net : null;
+  const worstNetValue = netEarnings.length ? netEarnings[netEarnings.length-1].net : null;
+  const bestNetTeams = netEarnings.filter(t=>t.net===bestNetValue).map(t=>t.name);
+  const worstNetTeams = netEarnings.filter(t=>t.net===worstNetValue).map(t=>t.name);
+  const hasNetSpread = bestNetValue !== null && worstNetValue !== null && bestNetValue !== worstNetValue;
+  const fresh = getDataFreshness();
 
   return `
   <h2 class="section-title" style="margin-bottom:18px;">Season at a glance</h2>
+
+  ${fresh.isStale ? `<div class="banner-note">${fresh.isPlayoffs ? 'Playoffs ' : ''}Week ${fresh.week} has started, but the most recent scores logged are from Week ${fresh.latestLogged}. Add Week ${fresh.latestLogged + 1} scores in the Sheet to catch this up.</div>` : ''}
 
   <div class="metric-grid">
     <div class="metric"><span class="v accent-green">${fmt(d.weeklyPayoutsToDate)}</span><span class="l">Weekly payouts to date</span></div>
     <div class="metric"><span class="v accent-amber">${fmt(talbotCollected)}</span><span class="l">Talbot tolls collected</span></div>
     <div class="metric"><span class="v accent-blue">${d.survivorRemaining ?? '—'}</span><span class="l">Survivor teams remaining</span></div>
     <div class="metric"><span class="v accent-teal">${fmt(d.charityRaised)}</span><span class="l">Charity raised</span></div>
+    <div class="metric"><span class="v accent-gold">${fmt(prizeOutstanding)}</span><span class="l">Prize money outstanding</span></div>
   </div>
 
   <div class="subgroup-title">Points race</div>
@@ -482,7 +538,7 @@ function renderOverview(){
     <div class="card feature-card">
       <div class="feature-label" style="color:var(--violet);">Wheel of misfortune watch</div>
       ${lastPlace
-        ? `<div class="feature-value">${lastPlace.teams.join(' & ')}</div><div class="feature-sub">${pts(lastPlace.min)} points — currently ${lastPlace.teams.length>1?'tied for ':''}last</div>`
+        ? `<div class="feature-value">${formatTiedNames(lastPlace.teams)}</div><div class="feature-sub">${pts(lastPlace.min)} points — currently ${lastPlace.teams.length>1?'tied for ':''}last</div>`
         : `<p class="empty">No scores logged yet.</p>`}
     </div>
   </div>
@@ -494,13 +550,13 @@ function renderOverview(){
       <div style="display:flex;gap:24px;flex-wrap:wrap;">
         <div>
           <div class="feature-label" style="color:var(--green);">Highest</div>
-          <div class="feature-value">${bestNet.name}</div>
-          <div class="feature-sub" style="color:var(--green);font-weight:600;">${fmtSigned(bestNet.net)}</div>
+          <div class="feature-value">${formatTiedNames(bestNetTeams)}</div>
+          <div class="feature-sub" style="color:var(--green);font-weight:600;">${fmtSigned(bestNetValue)}</div>
         </div>
         <div>
           <div class="feature-label" style="color:var(--amber);">Lowest</div>
-          <div class="feature-value">${worstNet.name}</div>
-          <div class="feature-sub" style="color:var(--amber);font-weight:600;">${fmtSigned(worstNet.net)}</div>
+          <div class="feature-value">${formatTiedNames(worstNetTeams)}</div>
+          <div class="feature-sub" style="color:var(--amber);font-weight:600;">${fmtSigned(worstNetValue)}</div>
         </div>
       </div>
     ` : `<p class="empty">Everyone's even so far.</p>`}
@@ -518,19 +574,32 @@ function renderOverview(){
 
 // ---------- PAYOUTS ----------
 function renderPayouts(){
-  const totals = (DATA.teamTotals||[]).slice().sort((a,b)=>Number(b.SeasonTotalPoints)-Number(a.SeasonTotalPoints));
-  const rows = totals.map(t=>`
+  const gamesByTeam = {};
+  (DATA.weeklyScores||[]).forEach(row=>{
+    gamesByTeam[row.TeamID] = (gamesByTeam[row.TeamID]||0) + 1;
+  });
+  const totals = (DATA.teamTotals||[]).slice().sort((a,b)=>{
+    const winsA = Number(a.WeeksWon||0), winsB = Number(b.WeeksWon||0);
+    if(winsB !== winsA) return winsB - winsA;
+    return Number(b.SeasonTotalPoints||0) - Number(a.SeasonTotalPoints||0);
+  });
+  const rows = totals.map(t=>{
+    const wins = Number(t.WeeksWon||0);
+    const played = gamesByTeam[t.TeamID] || 0;
+    const losses = Math.max(played - wins, 0);
+    return `
     <tr>
       <td>${teamName(t.TeamID)}</td>
+      <td class="num-cell">${wins}-${losses}</td>
       <td class="num-cell">${pts(t.SeasonTotalPoints)}</td>
-      <td class="num-cell">${t.WeeksWon}</td>
       <td class="num-cell">${fmt(t.WeeklyPayoutEarned)}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 
   const weeks = {};
   (DATA.weeklyScores||[]).forEach(row=>{
-    if(row.Won === 'Yes'){
+    if(row.Won === 'Yes' || row.Won === true){
       weeks[row.Week] = weeks[row.Week] || [];
       weeks[row.Week].push(teamName(row.TeamID));
     }
@@ -545,6 +614,8 @@ function renderPayouts(){
       <td class="num-cell">${fmt(t.earned)}</td>
       <td class="num-cell">${fmt(t.spent)}</td>
       <td class="num-cell" style="font-weight:600;color:${t.net>=0?'var(--green)':'var(--amber)'};">${fmtSigned(t.net)}</td>
+      <td class="num-cell">${fmt(t.paid)}</td>
+      <td class="num-cell" style="${t.owed>0?'color:var(--amber);font-weight:600;':''}">${t.owed>0?fmt(t.owed):'Settled'}</td>
     </tr>
   `).join('');
 
@@ -553,8 +624,9 @@ function renderPayouts(){
   <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
 
   <div class="card">
-    <h3>Season standings by points</h3>
-    ${rows ? `<table><thead><tr><th>Team</th><th class="num-cell">Points</th><th class="num-cell">Weeks won</th><th class="num-cell">Earned</th></tr></thead><tbody>${rows}</tbody></table>`
+    <h3>Team records</h3>
+    <p class="section-sub" style="margin-bottom:12px;">Sorted by record, then points as a tiebreaker. This is a running tally from the Sheet, not the official Yahoo standings used for playoff seeding.</p>
+    ${rows ? `<table><thead><tr><th>Team</th><th class="num-cell">Record</th><th class="num-cell">Points</th><th class="num-cell">Earned</th></tr></thead><tbody>${rows}</tbody></table>`
       : `<p class="empty">No scores logged yet.</p>`}
   </div>
 
@@ -566,8 +638,8 @@ function renderPayouts(){
 
   <div class="card">
     <h3>Net earnings by team</h3>
-    <p class="section-sub" style="margin-bottom:12px;">Earned = weekly payouts + Highest Score + Survivor + final standings, once each is determined. Spent = $150 entry fee + Talbot Toll fines + wheel buy-downs/buyout (only for the season's last-place team, once logged).</p>
-    ${netRows ? `<table><thead><tr><th>Team</th><th class="num-cell">Earned</th><th class="num-cell">Spent</th><th class="num-cell">Net</th></tr></thead><tbody>${netRows}</tbody></table>`
+    <p class="section-sub" style="margin-bottom:12px;">Earned = weekly payouts + Highest Score + Survivor + final standings, once each is determined. Spent = $150 entry fee + Talbot Toll fines + wheel buy-downs/buyout (only for the season's last-place team, once logged). Paid/Still owed tracks actual prize money sent, separate from what's owed to the league.</p>
+    ${netRows ? `<table><thead><tr><th>Team</th><th class="num-cell">Earned</th><th class="num-cell">Spent</th><th class="num-cell">Net</th><th class="num-cell">Paid</th><th class="num-cell">Still owed</th></tr></thead><tbody>${netRows}</tbody></table>`
       : `<p class="empty">No data yet.</p>`}
   </div>
   `;
