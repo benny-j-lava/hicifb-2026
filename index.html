@@ -82,6 +82,16 @@
     flex-wrap:wrap;
   }
   header h1{font-size:clamp(20px,4vw,26px);}
+  .header-controls{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .header-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+  .theme-toggle{flex-shrink:0;}
+  @media (max-width:640px){
+    header{flex-direction:column;align-items:stretch;gap:12px;padding:16px 18px 14px;}
+    .header-controls{align-items:stretch;}
+    .header-status{flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;}
+    .header-status .badges{justify-content:flex-start;}
+    .header-controls .link-row{justify-content:flex-start;}
+  }
   .badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
   .badge{
     background:var(--gold-bg);
@@ -233,7 +243,7 @@
   .metric .v{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;display:block;}
   .metric .l{font-size:12px;color:var(--text-muted);margin-top:2px;}
 
-  .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:4px;align-items:start;}
+  .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:4px;align-items:stretch;}
   .feature-card{margin-bottom:0;}
   .feature-label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:600;margin-bottom:8px;}
   .feature-value{font-family:'Sora',sans-serif;font-size:19px;font-weight:600;line-height:1.3;}
@@ -267,6 +277,22 @@
   }
   tbody tr{transition:background-color 0.1s ease;}
   tbody tr:hover{background-color:var(--border);}
+  .rank-cell{width:34px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
+  .cut-row td{
+    padding:4px 8px;
+    font-size:10.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--text-muted);
+    background:var(--bg);
+    border-top:1px dashed var(--border-strong);
+    border-bottom:1px dashed var(--border-strong);
+    text-align:center;
+  }
+  .cut-row:hover{background-color:transparent;}
+  .wheel-row td:first-child{box-shadow:inset 3px 0 0 var(--violet);}
+  .wheel-row td{background:var(--violet-bg);}
   .num-cell{text-align:right;font-variant-numeric:tabular-nums;}
   .pill{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
   .empty{color:var(--text-muted);font-size:13.5px;font-style:italic;padding:12px 0;margin:0;}
@@ -276,6 +302,26 @@
   .tag-violet{background:var(--violet-bg);color:var(--violet);}
   .tag-teal{background:var(--teal-bg);color:var(--teal);}
   .tag-gold{background:var(--gold-bg);color:var(--gold);}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 14px;}
+  @media (min-width:560px){ .stat-grid{grid-template-columns:repeat(4,1fr);} }
+  .team-head{margin:16px 0 12px;}
+  .team-head-name{font-family:'Sora',sans-serif;font-size:20px;font-weight:600;}
+  .team-head-owner{font-size:13px;color:var(--text-soft);margin-top:2px;}
+  .select-label{display:block;font-size:12px;color:var(--text-soft);margin:0 0 6px;}
+  .team-select{width:100%;max-width:340px;font:inherit;font-size:15px;color:var(--text);background:var(--bg-elev);border:1px solid var(--border-strong);border-radius:10px;padding:10px 12px;}
+  .team-select:focus-visible,.team-link:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--text-soft);}
+  .chart-legend .sw{display:inline-block;vertical-align:middle;margin-right:6px;}
+  .sw-win,.sw-loss{width:10px;height:10px;border-radius:3px;}
+  .sw-win{background:var(--green);}
+  .sw-loss{background:var(--text-muted);opacity:.55;}
+  .sw-line{width:16px;height:0;border-top:2px dashed var(--gold);}
+  .team-link{color:inherit;text-decoration:underline dotted var(--text-muted);text-underline-offset:3px;}
+  tr.selected-row td{font-weight:600;}
+  td.pos{color:var(--green);}
+  td.neg{color:var(--amber);}
+  .tag-gray{background:var(--border);color:var(--text-soft);}
 
   .loading{padding:70px 20px;text-align:center;color:var(--text-soft);}
   .spinner{
@@ -303,10 +349,12 @@
 
 <header>
   <h1>Huck It Chuck It Football</h1>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-    <div class="theme-toggle" id="theme-toggle"></div>
-    <div class="badges" id="header-badges">
-      <span class="badge-neutral">Loading…</span>
+  <div class="header-controls">
+    <div class="header-status">
+      <div class="badges" id="header-badges">
+        <span class="badge-neutral">Loading…</span>
+      </div>
+      <div class="theme-toggle" id="theme-toggle"></div>
     </div>
     <div class="link-row">
       <a class="link-btn" href="https://football.fantasysports.yahoo.com/f1/916694" target="_blank" rel="noopener">
@@ -345,6 +393,9 @@ const TABS = [
 let DATA = null;
 let activeTab = 'overview';
 let themeMode = 'system'; // 'system' | 'light' | 'dark'
+let selectedTeamId = null; // which team the Teams tab is showing
+let lastChartW = 0;
+let resizeTimer = null;
 
 const THEME_ICONS = {
   light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
@@ -508,7 +559,47 @@ function renderMain(){
     standings: renderStandings, teams: renderTeams
   };
   el.innerHTML = renderers[activeTab]();
+  el.querySelectorAll('.goto-standings').forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      activeTab = 'standings';
+      renderTabs();
+      renderMain();
+      window.scrollTo({ top: 0 });
+    });
+  });
+  // Any team name rendered as a .team-link opens that team's page.
+  el.querySelectorAll('.team-link').forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      selectTeam(a.dataset.team);
+    });
+  });
+  const teamSelect = el.querySelector('#team-select');
+  if(teamSelect){
+    teamSelect.addEventListener('change', ()=>{
+      selectedTeamId = teamSelect.value;
+      renderMain();
+    });
+  }
 }
+
+function selectTeam(id){
+  selectedTeamId = id;
+  activeTab = 'teams';
+  renderTabs();
+  renderMain();
+  window.scrollTo({ top: 0 });
+}
+
+// The chart is drawn at the container's real pixel width so its text stays a readable
+// size on phones; redraw if the width actually changes (rotation, window resize).
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    if(DATA && activeTab === 'teams' && getChartWidth() !== lastChartW) renderMain();
+  }, 150);
+});
 
 // Consistent title helper: category-colored left accent, used on every tab except Overview/Teams.
 function titleWithAccent(text, cssVar){
@@ -516,12 +607,37 @@ function titleWithAccent(text, cssVar){
 }
 
 // ---------- OVERVIEW ----------
+// Single source of truth for standings: best record first, total points as the
+// tiebreaker. Used by both the Team records table and the Wheel watch card.
+function rankTeams(){
+  const gamesByTeam = {};
+  (DATA.weeklyScores||[]).forEach(row=>{
+    gamesByTeam[row.TeamID] = (gamesByTeam[row.TeamID]||0) + 1;
+  });
+  return (DATA.teamTotals||[]).filter(t=>t.TeamID).map(t=>{
+    const wins = Number(t.WeeksWon||0);
+    const played = gamesByTeam[t.TeamID] || 0;
+    return { ...t, wins, losses: Math.max(played - wins, 0), points: Number(t.SeasonTotalPoints||0) };
+  }).sort((a,b)=> b.wins - a.wins || b.points - a.points);
+}
+
+// Average points per game for whoever currently leads the season-long Highest Score race.
+function computeLeaderAverage(){
+  const d = DATA.dashboard || {};
+  const leader = (DATA.teamTotals||[]).find(t=>t.TeamName===d.highScoreLeader);
+  if(!leader) return null;
+  const games = (DATA.weeklyScores||[]).filter(r=>r.TeamID===leader.TeamID && r.Score!=='' && r.Score!==null && r.Score!==undefined).length;
+  if(!games) return null;
+  return { games, avg: Number(d.highScoreTotal||0) / games };
+}
+
 function computeLastPlace(){
-  const totals = (DATA.teamTotals||[]).filter(t => t.TeamID);
-  if(!totals.length) return null;
-  const min = Math.min(...totals.map(t=>Number(t.SeasonTotalPoints||0)));
-  const teams = totals.filter(t=>Number(t.SeasonTotalPoints||0)===min).map(t=>teamName(t.TeamID));
-  return {min, teams};
+  const ranked = rankTeams();
+  if(!ranked.length) return null;
+  const last = ranked[ranked.length-1];
+  // Only a true tie (same wins AND same points) counts as sharing last place.
+  const tied = ranked.filter(t=>t.wins===last.wins && t.points===last.points);
+  return { wins: last.wins, losses: last.losses, points: last.points, teams: tied.map(t=>teamName(t.TeamID)) };
 }
 
 function computeNetEarnings(){
@@ -564,6 +680,7 @@ function computeNetEarnings(){
 function renderOverview(){
   const d = DATA.dashboard || {};
   const hasScores = d.highScoreLeader && Number(d.highScoreTotal) > 0;
+  const leaderAvg = hasScores ? computeLeaderAverage() : null;
   const survivorAlive = (DATA.teamTotals||[]).filter(t=>t.SurvivorEliminated==='No').map(t=>teamName(t.TeamID)).sort();
   const lastPlace = hasScores ? computeLastPlace() : null;
   const talbotCollected = (DATA.talbotToll||[]).filter(f=>f.Paid==='Yes').reduce((s,f)=>s+Number(f.Amount||0),0);
@@ -594,13 +711,13 @@ function renderOverview(){
     <div class="card feature-card">
       <div class="feature-label">Highest score race</div>
       ${hasScores
-        ? `<div class="feature-value">${d.highScoreLeader}</div><div class="feature-sub">${pts(d.highScoreTotal)} points this season</div>`
+        ? `<div class="feature-value">${d.highScoreLeader}</div><div class="feature-sub">${pts(d.highScoreTotal)} points this season</div>${leaderAvg ? `<div class="feature-sub">${pts(leaderAvg.avg)} avg per game over ${leaderAvg.games} ${leaderAvg.games===1?'week':'weeks'}</div>` : ''}`
         : `<p class="empty">No scores logged yet.</p>`}
     </div>
     <div class="card feature-card">
       <div class="feature-label" style="color:var(--violet);">Wheel of misfortune watch</div>
       ${lastPlace
-        ? `<div class="feature-value">${formatTiedNames(lastPlace.teams)}</div><div class="feature-sub">${pts(lastPlace.min)} points — currently ${lastPlace.teams.length>1?'tied for ':''}last</div>`
+        ? `<div class="feature-value">${formatTiedNames(lastPlace.teams)}</div><div class="feature-sub">${lastPlace.wins}-${lastPlace.losses}, ${pts(lastPlace.points)} points — currently ${lastPlace.teams.length>1?'tied for ':''}last in the standings</div><div class="feature-sub"><a href="#" class="goto-standings" style="color:var(--violet);">See full standings</a></div>`
         : `<p class="empty">No scores logged yet.</p>`}
     </div>
   </div>
@@ -636,29 +753,6 @@ function renderOverview(){
 
 // ---------- PAYOUTS ----------
 function renderPayouts(){
-  const gamesByTeam = {};
-  (DATA.weeklyScores||[]).forEach(row=>{
-    gamesByTeam[row.TeamID] = (gamesByTeam[row.TeamID]||0) + 1;
-  });
-  const totals = (DATA.teamTotals||[]).slice().sort((a,b)=>{
-    const winsA = Number(a.WeeksWon||0), winsB = Number(b.WeeksWon||0);
-    if(winsB !== winsA) return winsB - winsA;
-    return Number(b.SeasonTotalPoints||0) - Number(a.SeasonTotalPoints||0);
-  });
-  const rows = totals.map(t=>{
-    const wins = Number(t.WeeksWon||0);
-    const played = gamesByTeam[t.TeamID] || 0;
-    const losses = Math.max(played - wins, 0);
-    return `
-    <tr>
-      <td>${teamName(t.TeamID)}</td>
-      <td class="num-cell">${wins}-${losses}</td>
-      <td class="num-cell">${pts(t.SeasonTotalPoints)}</td>
-      <td class="num-cell">${fmt(t.WeeklyPayoutEarned)}</td>
-    </tr>
-  `;
-  }).join('');
-
   const weeks = {};
   (DATA.weeklyScores||[]).forEach(row=>{
     if(row.Won === 'Yes' || row.Won === true){
@@ -697,13 +791,6 @@ function renderPayouts(){
   return `
   ${titleWithAccent('Weekly payouts', '--green')}
   <p class="section-sub">$10 to each winning team, per week of the regular season.</p>
-
-  <div class="card">
-    <h3>Team records</h3>
-    <p class="section-sub" style="margin-bottom:12px;">Sorted by record, then points as a tiebreaker. This is a running tally from the Sheet, not the official Yahoo standings used for playoff seeding.</p>
-    ${rows ? `<table><thead><tr><th>Team</th><th class="num-cell">Record</th><th class="num-cell">Points</th><th class="num-cell">Earned</th></tr></thead><tbody>${rows}</tbody></table>`
-      : `<p class="empty">No scores logged yet.</p>`}
-  </div>
 
   <div class="card">
     <h3>Week-by-week winners</h3>
@@ -867,34 +954,200 @@ function renderCharity(){
 }
 
 // ---------- STANDINGS ----------
+const BYE_SPOTS = 2;       // top 2 teams skip the first playoff round
+const PLAYOFF_SPOTS = 6;   // 6-team championship bracket
+
 function renderStandings(){
-  const rows = (DATA.standings||[]).map(s=>`
+  const ranked = rankTeams();
+  const hasScores = (DATA.weeklyScores||[]).length > 0;
+  const last = ranked.length ? ranked[ranked.length-1] : null;
+  const bodyRows = [];
+
+  ranked.forEach((t, i)=>{
+    const inWheelZone = last && t.wins===last.wins && t.points===last.points;
+    bodyRows.push(`
+    <tr${inWheelZone ? ' class="wheel-row"' : ''}>
+      <td class="rank-cell">${i+1}</td>
+      <td><a href="#" class="team-link" data-team="${t.TeamID}">${escapeHtml(teamName(t.TeamID))}</a>${inWheelZone ? ' <span class="pill tag-violet">Wheel zone</span>' : ''}</td>
+      <td class="num-cell">${t.wins}-${t.losses}</td>
+      <td class="num-cell">${pts(t.points)}</td>
+      <td class="num-cell">${fmt(t.WeeklyPayoutEarned)}</td>
+    </tr>`);
+    if(ranked.length > PLAYOFF_SPOTS){
+      if(i === BYE_SPOTS-1) bodyRows.push(`<tr class="cut-row"><td colspan="5">First-round bye line</td></tr>`);
+      if(i === PLAYOFF_SPOTS-1) bodyRows.push(`<tr class="cut-row"><td colspan="5">Playoff line</td></tr>`);
+    }
+  });
+
+  // Final payouts only appear once the commissioner has filled in the placings.
+  const finalsSet = (DATA.standings||[]).some(s => s.TeamID);
+  const finalRows = (DATA.standings||[]).map(s=>`
     <tr>
       <td>${s.Place}</td>
-      <td>${s.TeamID ? teamName(s.TeamID) : '—'}</td>
+      <td>${s.TeamID ? teamName(s.TeamID) : (s.TeamName || '—')}</td>
       <td class="num-cell">${fmt(s.Payout)}</td>
     </tr>
   `).join('');
 
   return `
-  ${titleWithAccent('Final standings', '--gold')}
-  <p class="section-sub">Set once the championship wraps.</p>
+  ${titleWithAccent('Standings', '--gold')}
+  <p class="section-sub">Ranked by record, with total points as the tiebreaker. These standings may be outdated and could differ slightly from Yahoo, which is the source of truth. <a href="https://football.fantasysports.yahoo.com/f1/916694" target="_blank" rel="noopener" style="color:var(--gold);">Open Yahoo league</a></p>
 
   <div class="card">
-    ${rows ? `<table><thead><tr><th>Place</th><th>Team</th><th class="num-cell">Payout</th></tr></thead><tbody>${rows}</tbody></table>`
-      : `<p class="empty">Final standings not set yet.</p>`}
+    ${hasScores && ranked.length ? `<table><thead><tr><th class="rank-cell">#</th><th>Team</th><th class="num-cell">Record</th><th class="num-cell">Points</th><th class="num-cell">Earned</th></tr></thead><tbody>${bodyRows.join('')}</tbody></table>`
+      : `<p class="empty">Standings will show up once Week 1 scores are in.</p>`}
+  </div>
+
+  <div class="card">
+    <h3>Final payouts</h3>
+    ${finalsSet && finalRows ? `<table><thead><tr><th>Place</th><th>Team</th><th class="num-cell">Payout</th></tr></thead><tbody>${finalRows}</tbody></table>`
+      : `<p class="empty">Set once the championship wraps.</p>`}
   </div>
   `;
 }
 
 // ---------- TEAMS ----------
+function isWin(row){ return row.Won === 'Yes' || row.Won === true; }
+
+function median(nums){
+  const a = nums.slice().sort((x,y)=>x-y);
+  if(!a.length) return 0;
+  const m = Math.floor(a.length/2);
+  return a.length % 2 ? a[m] : (a[m-1] + a[m]) / 2;
+}
+
+// Per-week league context: every score, the median, and whether the week's
+// results are in yet (at least one team has been marked a winner).
+function getWeeklyLeague(){
+  const byWeek = {};
+  (DATA.weeklyScores||[]).forEach(r=>{
+    const w = Number(r.Week), sc = Number(r.Score);
+    if(!w || isNaN(sc)) return;
+    (byWeek[w] = byWeek[w] || {scores:[], decided:false});
+    byWeek[w].scores.push(sc);
+    if(isWin(r)) byWeek[w].decided = true;
+  });
+  Object.keys(byWeek).forEach(w=>{ byWeek[w].median = median(byWeek[w].scores); });
+  return byWeek;
+}
+
+function getChartWidth(){
+  const m = document.getElementById('main');
+  const w = m && m.clientWidth ? m.clientWidth - 74 : 340;
+  return Math.max(260, Math.min(840, w));
+}
+
+function niceStep(max){ return max <= 100 ? 25 : max <= 250 ? 50 : 100; }
+
+function buildTeamChart(teamId, league){
+  const rows = (DATA.weeklyScores||[])
+    .filter(r=>r.TeamID===teamId && Number(r.Week) && !isNaN(Number(r.Score)))
+    .sort((a,b)=>Number(a.Week)-Number(b.Week));
+  if(!rows.length) return '';
+  const W = getChartWidth(); lastChartW = W;
+  const H = 250, ml = 34, mr = 8, mt = 16, mb = 24;
+  const pw = W - ml - mr, ph = H - mt - mb;
+  const medians = rows.map(r=>league[Number(r.Week)].median);
+  const maxVal = Math.max(...rows.map(r=>Number(r.Score)), ...medians, 1);
+  const step = niceStep(maxVal);
+  const top = Math.ceil(maxVal / step) * step;
+  const y = v => mt + ph - (v / top) * ph;
+  const slot = pw / rows.length;
+  const bw = Math.max(4, Math.min(34, slot * 0.62));
+  let g = '';
+  for(let v = 0; v <= top; v += step){
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
+    g += `<text x="${ml-6}" y="${(y(v)+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--text-muted)">${v}</text>`;
+  }
+  let bars = '', labels = '', pts_ = [], dots = '';
+  rows.forEach((r,i)=>{
+    const wk = Number(r.Week), sc = Number(r.Score), lg = league[wk];
+    const cx = ml + slot*i + slot/2;
+    const win = isWin(r);
+    const fill = win ? 'var(--green)' : 'var(--text-muted)';
+    const op = win ? 1 : (lg.decided ? 0.55 : 0.4);
+    const bh = (sc / top) * ph;
+    const status = win ? 'Win' : (lg.decided ? 'Loss' : 'Pending');
+    bars += `<rect x="${(cx-bw/2).toFixed(1)}" y="${y(sc).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${fill}" opacity="${op}"><title>Week ${wk}: ${sc.toFixed(1)} (${status}), league median ${lg.median.toFixed(1)}</title></rect>`;
+    if(slot >= 28) labels += `<text x="${cx.toFixed(1)}" y="${(y(sc)-4).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--text-soft)">${Math.round(sc)}</text>`;
+    if(slot >= 14 || i % 2 === 0) labels += `<text x="${cx.toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="10" fill="var(--text-muted)">${wk}</text>`;
+    pts_.push(`${cx.toFixed(1)},${y(lg.median).toFixed(1)}`);
+    dots += `<circle cx="${cx.toFixed(1)}" cy="${y(lg.median).toFixed(1)}" r="3" fill="var(--bg-elev)" stroke="var(--gold)" stroke-width="1.5"/>`;
+  });
+  const line = pts_.length > 1 ? `<polyline points="${pts_.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4 3"/>` : '';
+  const aria = `Weekly scores for ${teamName(teamId)} compared with the league median`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${escapeHtml(aria)}" style="display:block;max-width:${W}px;">${g}${bars}${line}${dots}${labels}</svg>`;
+}
+
 function renderTeams(){
-  const rows = (DATA.teams||[]).map(t=>`<tr><td>${t.TeamName}</td><td>${t.Owner || '—'}</td></tr>`).join('');
+  const teams = DATA.teams || [];
+  if(!teams.length) return `<h2 class="section-title">Teams</h2><p class="empty">No teams yet.</p>`;
+  if(!selectedTeamId || !teams.some(t=>t.TeamID===selectedTeamId)) selectedTeamId = teams[0].TeamID;
+  const team = teams.find(t=>t.TeamID===selectedTeamId);
+  const ranked = rankTeams();
+  const league = getWeeklyLeague();
+  const rankIdx = ranked.findIndex(t=>t.TeamID===selectedTeamId);
+  const rt = rankIdx >= 0 ? ranked[rankIdx] : null;
+  const mine = (DATA.weeklyScores||[])
+    .filter(r=>r.TeamID===selectedTeamId && Number(r.Week) && !isNaN(Number(r.Score)))
+    .sort((a,b)=>Number(a.Week)-Number(b.Week));
+  const hasScores = (DATA.weeklyScores||[]).length > 0;
+
+  const options = teams.map(t=>`<option value="${escapeHtml(t.TeamID)}"${t.TeamID===selectedTeamId?' selected':''}>${escapeHtml(t.TeamName)}</option>`).join('');
+
+  let aboveCount = 0;
+  const tableRows = mine.map(r=>{
+    const wk = Number(r.Week), sc = Number(r.Score), lg = league[wk];
+    const diff = sc - lg.median;
+    if(diff > 0) aboveCount++;
+    const win = isWin(r);
+    const pill = win ? '<span class="pill tag-green">Win</span>' : (lg.decided ? '<span class="pill tag-gray">Loss</span>' : '—');
+    const diffCls = diff > 0 ? 'pos' : diff < 0 ? 'neg' : '';
+    const diffTxt = (diff > 0 ? '+' : diff < 0 ? '−' : '') + Math.abs(diff).toFixed(1);
+    return `<tr><td>${wk}</td><td class="num-cell">${pts(sc)}</td><td class="num-cell">${pts(lg.median)}</td><td class="num-cell ${diffCls}">${diffTxt}</td><td class="num-cell">${pill}</td></tr>`;
+  }).join('');
+
+  const played = mine.length;
+  const totalPts = mine.reduce((a,r)=>a+Number(r.Score),0);
+  const stats = `
+    <div class="stat-grid">
+      <div class="metric"><span class="v">${rt && hasScores ? '#'+(rankIdx+1) : '—'}</span><div class="l">Standing${rt && hasScores ? ' of '+ranked.length : ''}</div></div>
+      <div class="metric"><span class="v">${rt && played ? rt.wins+'-'+rt.losses : '—'}</span><div class="l">Record</div></div>
+      <div class="metric"><span class="v">${played ? pts(totalPts/played) : '—'}</span><div class="l">Avg per game</div></div>
+      <div class="metric"><span class="v">${played ? aboveCount+' of '+played : '—'}</span><div class="l">Weeks above median</div></div>
+    </div>`;
+
+  const chart = played ? `
+    <div class="card">
+      <h3>Week by week</h3>
+      ${buildTeamChart(selectedTeamId, league)}
+      <div class="chart-legend">
+        <span><i class="sw sw-win"></i>Win</span>
+        <span><i class="sw sw-loss"></i>Loss</span>
+        <span><i class="sw sw-line"></i>League median</span>
+      </div>
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Week</th><th class="num-cell">Score</th><th class="num-cell">Median</th><th class="num-cell">vs median</th><th class="num-cell">Result</th></tr></thead><tbody>${tableRows}</tbody></table>
+    </div>` : `<div class="card"><p class="empty">Weekly scores will show up once Week 1 is in.</p></div>`;
+
+  const rosterRows = teams.map(t=>{
+    const r = ranked.find(x=>x.TeamID===t.TeamID);
+    const rec = r && hasScores ? `${r.wins}-${r.losses}` : '—';
+    return `<tr${t.TeamID===selectedTeamId?' class="selected-row"':''}><td><a href="#" class="team-link" data-team="${escapeHtml(t.TeamID)}">${escapeHtml(t.TeamName)}</a></td><td>${escapeHtml(t.Owner || '—')}</td><td class="num-cell">${rec}</td></tr>`;
+  }).join('');
+
   return `
   <h2 class="section-title">Teams</h2>
-  <p class="section-sub">Roster of teams and owners for the season.</p>
+  <p class="section-sub">Pick a team to see how it has scored week by week against the league median.</p>
+  <label class="select-label" for="team-select">Team</label>
+  <select id="team-select" class="team-select">${options}</select>
+  <div class="team-head"><div class="team-head-name">${escapeHtml(team.TeamName)}</div><div class="team-head-owner">${escapeHtml(team.Owner || '')}</div></div>
+  ${stats}
+  ${chart}
   <div class="card">
-    <table><thead><tr><th>Team</th><th>Owner</th></tr></thead><tbody>${rows}</tbody></table>
+    <h3>All teams</h3>
+    <table><thead><tr><th>Team</th><th>Owner</th><th class="num-cell">Record</th></tr></thead><tbody>${rosterRows}</tbody></table>
   </div>
   `;
 }
