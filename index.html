@@ -279,11 +279,13 @@ const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => { const v = Math.round(Number(n)||0); return (v<0?'−':'') + '$' + Math.abs(v).toLocaleString('en-US'); };
 const signed = n => { const v = Math.round(Number(n)||0); return (v<0?'−':v>0?'+':'') + '$' + Math.abs(v).toLocaleString('en-US'); };
-const pts = n => (Number(n)||0).toFixed(1);
+// Yahoo scores to 2 decimals: round every derived number to cents of a point so float drift never shows up or breaks ties.
+const r2 = n => Math.round((Number(n)||0)*100)/100;
+const pts = n => r2(n).toFixed(2);
 const isWin = r => r.Won === 'Yes' || r.Won === true;
 const hasNum = v => v !== '' && v !== null && v !== undefined && !isNaN(Number(v));
 function slugify(s){ return String(s).toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'team'; }
-function median(nums){ const a = nums.slice().sort((x,y)=>x-y); if(!a.length) return 0; const m = Math.floor(a.length/2); return a.length%2 ? a[m] : (a[m-1]+a[m])/2; }
+function median(nums){ const a = nums.slice().sort((x,y)=>x-y); if(!a.length) return 0; const m = Math.floor(a.length/2); return r2(a.length%2 ? a[m] : (a[m-1]+a[m])/2); }
 function listNames(names){ if(names.length<=2) return names.join(' & '); return names.slice(0,-1).join(', ') + ' & ' + names[names.length-1]; }
 
 const ICON = {
@@ -356,7 +358,7 @@ function buildModel(){
   m.ranked = m.teams.map(t=>{
     const tot = totalsById[t.TeamID] || {};
     const wins = Number(tot.WeeksWon||0), played = games[t.TeamID]||0;
-    return { id:t.TeamID, wins, losses:Math.max(played-wins,0), played, points:Number(tot.SeasonTotalPoints||0), weekly:Number(tot.WeeklyPayoutEarned||0) };
+    return { id:t.TeamID, wins, losses:Math.max(played-wins,0), played, points:r2(tot.SeasonTotalPoints), weekly:Number(tot.WeeklyPayoutEarned||0) };
   }).sort((a,b)=> b.wins-a.wins || b.points-a.points);
   m.rankOf = {}; m.ranked.forEach((r,i)=>{ m.rankOf[r.id] = i+1; });
   m.recOf = {}; m.ranked.forEach(r=>{ m.recOf[r.id] = r; });
@@ -373,7 +375,7 @@ function buildModel(){
 
   m.league = {};
   (DATA.weeklyScores||[]).forEach(r=>{
-    const w = Number(r.Week), sc = Number(r.Score);
+    const w = Number(r.Week), sc = r2(r.Score);
     if(!w || isNaN(sc)) return;
     (m.league[w] = m.league[w] || {scores:[], decided:false}).scores.push(sc);
     if(isWin(r)) m.league[w].decided = true;
@@ -492,7 +494,7 @@ function teamHero(id, compact){
   const t = M.byId[id], rec = M.recOf[id] || {wins:0,losses:0,played:0,points:0}, n = M.netById[id] || {owed:0,earned:0,spent:150,net:-150};
   const out = M.survivorOut(id);
   const fines = M.finesOwedBy(id);
-  const avg = rec.played ? rec.points / rec.played : 0;
+  const avg = rec.played ? r2(rec.points / rec.played) : 0;
   const pills = [];
   pills.push(out ? `<span class="pill p-amber">Survivor: out in Wk ${M.elimWeek[id] || '?'}</span>` : `<span class="pill p-blue">Survivor: alive</span>`);
   if(M.wheelZone.has(id)) pills.push('<span class="pill p-violet">Wheel zone</span>');
@@ -741,10 +743,10 @@ function renderTeam(slug){
   const rows = M.teamRows(id);
   let above = 0;
   const wk = rows.map(r=>{
-    const w = Number(r.Week), sc = Number(r.Score), lg = M.league[w], diff = sc - lg.median;
+    const w = Number(r.Week), sc = r2(r.Score), lg = M.league[w], diff = r2(sc - lg.median);
     if(diff>0) above++;
     const res = isWin(r) ? '<span class="pill p-green">Win</span>' : (lg.decided ? '<span class="pill">Loss</span>' : '<span class="muted">—</span>');
-    return `<tr><td>${w}</td><td class="r">${pts(sc)}</td><td class="r hide-xs">${pts(lg.median)}</td><td class="r ${diff>0?'pos':diff<0?'neg':''}">${diff>0?'+':diff<0?'−':''}${Math.abs(diff).toFixed(1)}</td><td class="r">${res}</td></tr>`;
+    return `<tr><td>${w}</td><td class="r">${pts(sc)}</td><td class="r hide-xs">${pts(lg.median)}</td><td class="r ${diff>0?'pos':diff<0?'neg':''}">${diff>0?'+':diff<0?'−':''}${Math.abs(diff).toFixed(2)}</td><td class="r">${res}</td></tr>`;
   }).reverse().join('');
   const mine = id === myTeamId;
   const fines = M.fines.filter(f=>f.TeamID===id).slice().reverse();
@@ -792,10 +794,10 @@ function chartSVG(teamId, W){
   }
   let bars = '', labels = '', line = [], dots = '';
   rows.forEach((r,i)=>{
-    const wk = Number(r.Week), sc = Number(r.Score), lg = M.league[wk], cx = ml + slot*i + slot/2, win = isWin(r);
+    const wk = Number(r.Week), sc = r2(r.Score), lg = M.league[wk], cx = ml + slot*i + slot/2, win = isWin(r);
     const op = win ? 1 : (lg.decided ? .5 : .35);
-    bars += `<rect x="${(cx-bw/2).toFixed(1)}" y="${y(sc).toFixed(1)}" width="${bw.toFixed(1)}" height="${((sc/top)*ph).toFixed(1)}" rx="3" style="fill:${win?'var(--green)':'var(--ink-3)'}" opacity="${op}"><title>Week ${wk}: ${sc.toFixed(1)} (${win?'Win':lg.decided?'Loss':'Pending'}), league median ${lg.median.toFixed(1)}</title></rect>`;
-    if(slot>=28) labels += `<text x="${cx.toFixed(1)}" y="${(y(sc)-4).toFixed(1)}" text-anchor="middle" font-size="10" style="fill:var(--ink-2)">${Math.round(sc)}</text>`;
+    bars += `<rect x="${(cx-bw/2).toFixed(1)}" y="${y(sc).toFixed(1)}" width="${bw.toFixed(1)}" height="${((sc/top)*ph).toFixed(1)}" rx="3" style="fill:${win?'var(--green)':'var(--ink-3)'}" opacity="${op}"><title>Week ${wk}: ${sc.toFixed(2)} (${win?'Win':lg.decided?'Loss':'Pending'}), league median ${lg.median.toFixed(2)}</title></rect>`;
+    if(slot>=28) labels += `<text x="${cx.toFixed(1)}" y="${(y(sc)-4).toFixed(1)}" text-anchor="middle" font-size="10" style="fill:var(--ink-2)">${slot>=52 ? sc.toFixed(2) : Math.round(sc)}</text>`;
     if(slot>=14 || i%2===0) labels += `<text x="${cx.toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="10" style="fill:var(--ink-3)">${wk}</text>`;
     line.push(`${cx.toFixed(1)},${y(lg.median).toFixed(1)}`);
     dots += `<circle cx="${cx.toFixed(1)}" cy="${y(lg.median).toFixed(1)}" r="3" style="fill:var(--surface);stroke:var(--gold);stroke-width:1.5"/>`;
